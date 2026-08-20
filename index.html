@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Proof of Ownership — sign &amp; verify wallet messages</title>
+    <meta
+      name="description"
+      content="Sign a message with your Ethereum or Solana wallet and verify signatures entirely in your browser. No server, no storage, no keys ever leave your wallet."
+    />
+    <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="wordmark">
+        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+          <circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" />
+          <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-dasharray="2 2.4" />
+          <path d="M11 16.2 L14.6 20 L21.4 12.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
+        </svg>
+        <span class="wordmark-text">
+          <strong>Proof of Ownership</strong>
+          <span>Sign &amp; verify wallet messages</span>
+        </span>
+      </div>
+      <p class="assurance">
+        <span class="dot" aria-hidden="true"></span>
+        Everything runs locally · nothing is uploaded or stored
+      </p>
+    </header>
+
+    <main id="main">
+      <section class="controls" aria-label="Chain and mode">
+        <div class="control">
+          <span class="control-label" id="chain-label">Chain</span>
+          <div class="segmented" role="radiogroup" aria-labelledby="chain-label" id="chain-selector"></div>
+        </div>
+        <div class="control">
+          <span class="control-label" id="mode-label">Mode</span>
+          <div class="segmented" role="tablist" aria-labelledby="mode-label">
+            <button type="button" class="segment" role="tab" id="tab-sign" data-tab="sign" aria-controls="panel-sign" aria-selected="true">
+              Sign message
+            </button>
+            <button type="button" class="segment" role="tab" id="tab-verify" data-tab="verify" aria-controls="panel-verify" aria-selected="false" tabindex="-1">
+              Verify signature
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Sign ─────────────────────────────────────────────────────── -->
+      <section class="panel" id="panel-sign" role="tabpanel" aria-labelledby="tab-sign">
+        <div class="card">
+          <div class="card-head">
+            <h2>Sign a message</h2>
+            <p class="card-note" id="sign-standard"></p>
+          </div>
+
+          <div class="wallet-bar" id="wallet-bar">
+            <div class="wallet-disconnected" id="wallet-disconnected">
+              <button type="button" class="button button-primary" id="connect-button">Connect wallet</button>
+              <p class="hint">Signing is off-chain: it costs nothing and broadcasts nothing.</p>
+            </div>
+
+            <div class="wallet-connected" id="wallet-connected" hidden>
+              <div class="wallet-identity">
+                <span class="wallet-name" id="connected-wallet-name"></span>
+                <code class="mono address" id="connected-address" title=""></code>
+              </div>
+              <div class="wallet-actions">
+                <button type="button" class="button button-ghost" id="copy-address-button">Copy</button>
+                <button type="button" class="button button-ghost" id="disconnect-button">Disconnect</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="sign-message">Message</label>
+            <textarea
+              id="sign-message"
+              class="input mono"
+              rows="5"
+              spellcheck="false"
+              autocomplete="off"
+              placeholder="Type the exact message you want to sign…"
+            ></textarea>
+            <p class="hint">
+              The message is signed byte for byte. Spaces, line breaks and trailing newlines
+              are part of the signature and are never trimmed.
+            </p>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="button button-primary" id="sign-button" disabled>Sign message</button>
+            <p class="inline-error" id="sign-error" role="alert" hidden></p>
+          </div>
+
+          <div class="proof" id="sign-result" hidden>
+            <h3 class="proof-title">Signed</h3>
+            <dl class="proof-fields">
+              <div class="proof-field">
+                <dt>Address</dt>
+                <dd>
+                  <code class="mono" id="result-address"></code>
+                  <button type="button" class="button button-copy" data-copy="address">Copy</button>
+                </dd>
+              </div>
+              <div class="proof-field">
+                <dt>Message</dt>
+                <dd>
+                  <pre class="mono" id="result-message"></pre>
+                  <button type="button" class="button button-copy" data-copy="message">Copy</button>
+                </dd>
+              </div>
+              <div class="proof-field">
+                <dt>Signature</dt>
+                <dd>
+                  <code class="mono break" id="result-signature"></code>
+                  <button type="button" class="button button-copy" data-copy="signature">Copy</button>
+                </dd>
+              </div>
+            </dl>
+            <div class="proof-actions">
+              <button type="button" class="button" id="copy-json-button">Copy all as JSON</button>
+              <button type="button" class="button" id="copy-link-button">Copy shareable link</button>
+              <button type="button" class="button button-ghost" id="open-verify-button">Verify it now</button>
+            </div>
+            <p class="hint">
+              The shareable link carries the proof in the URL fragment, so it is never sent to
+              any server. Anyone who opens it can re-check the signature themselves.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Verify ───────────────────────────────────────────────────── -->
+      <section class="panel" id="panel-verify" role="tabpanel" aria-labelledby="tab-verify" hidden>
+        <div class="card">
+          <div class="card-head">
+            <h2>Verify a signature</h2>
+            <p class="card-note" id="verify-standard"></p>
+          </div>
+
+          <div class="field">
+            <label class="label" for="verify-address">Address</label>
+            <input id="verify-address" class="input mono" type="text" spellcheck="false" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label class="label" for="verify-message">Message</label>
+            <textarea id="verify-message" class="input mono" rows="5" spellcheck="false" autocomplete="off"></textarea>
+            <p class="hint">Paste the message exactly as it was signed — whitespace included.</p>
+          </div>
+
+          <div class="field">
+            <label class="label" for="verify-signature">Signature</label>
+            <textarea id="verify-signature" class="input mono" rows="3" spellcheck="false" autocomplete="off"></textarea>
+            <p class="hint" id="verify-signature-hint"></p>
+          </div>
+
+          <div class="actions">
+            <button type="button" class="button button-primary" id="verify-button">Verify</button>
+            <button type="button" class="button button-ghost" id="clear-verify-button">Clear</button>
+          </div>
+
+          <div class="verdict" id="verify-result" hidden aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- ── Explainer ────────────────────────────────────────────────── -->
+      <section class="explainer" aria-labelledby="explainer-title">
+        <h2 id="explainer-title">How it works, and why it is safe</h2>
+        <div class="explainer-grid">
+          <div>
+            <h3>Signing proves control</h3>
+            <p>
+              Your wallet signs the message with your private key. The key never leaves the
+              wallet — the site only receives the resulting signature. Nothing is broadcast to
+              a blockchain, so there is no gas fee and no transaction.
+            </p>
+          </div>
+          <div>
+            <h3>Verification is pure maths</h3>
+            <p>
+              Checking a signature needs only the address, the message and the signature. It
+              happens in your browser with no wallet connection and no network request, so you
+              can verify a proof offline or from a downloaded copy of this page.
+            </p>
+          </div>
+          <div>
+            <h3>Nothing is stored</h3>
+            <p>
+              There is no backend, no database and no analytics. Shareable links keep the proof
+              in the URL fragment, which browsers never transmit to a server.
+            </p>
+          </div>
+          <div>
+            <h3>One character changes everything</h3>
+            <p>
+              Alter a single byte of the message or the signature and verification fails. That
+              is the point: a valid result means this exact text was signed by that exact key.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Open source and auditable. Signatures are interoperable with Etherscan&rsquo;s and
+        Solscan&rsquo;s verification tools.
+      </p>
+    </footer>
+
+    <dialog class="wallet-dialog" id="wallet-dialog" aria-labelledby="wallet-dialog-title">
+      <div class="wallet-dialog-head">
+        <h2 id="wallet-dialog-title">Choose a wallet</h2>
+        <button type="button" class="button button-ghost" id="wallet-dialog-close" aria-label="Close">Close</button>
+      </div>
+      <ul class="wallet-list" id="wallet-list"></ul>
+      <p class="inline-error" id="wallet-dialog-error" role="alert" hidden></p>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

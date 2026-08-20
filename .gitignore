@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local environment overrides — never commit a project ID or any other secret.
+.env
+.env.*
+!.env.example
+
+.DS_Store
+*.log

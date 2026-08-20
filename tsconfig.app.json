@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "tsBuildInfoFile": "node_modules/.tmp/tsconfig.app.tsbuildinfo",
+
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    // Deliberately excludes "node": browser code should not be able to reach
+    // for `process` or `Buffer` without the type checker objecting.
+    "types": ["vite/client"],
+
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    // Relative imports carry their `.ts` extension so the same source runs
+    // unmodified under Node's type stripping for the test suite.
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src", "env.d.ts"]
+}

@@ -1,0 +1,32 @@
+{
+  "name": "proof-of-ownership",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Static, client-side tool to sign messages with a crypto wallet and verify signatures.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "test": "node --test 'test/**/*.test.ts'"
+  },
+  "dependencies": {
+    "@walletconnect/ethereum-provider": "^2.23.10",
+    "bs58": "^6.0.0",
+    "tweetnacl": "^1.0.3",
+    "viem": "^2.55.19"
+  },
+  "devDependencies": {
+    "@types/node": "^26.2.0",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.2"
+  },
+  "overrides": {
+    "axios": "^1.19.0"
+  }
+}
