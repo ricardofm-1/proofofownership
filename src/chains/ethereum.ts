@@ -28,6 +28,48 @@ import {
 const WALLETCONNECT_ID = 'walletconnect';
 const METAMASK_INSTALL_URL = 'https://metamask.io/download/';
 
+type WalletConnectProvider = Awaited<
+  ReturnType<(typeof import('@walletconnect/ethereum-provider'))['EthereumProvider']['init']>
+>;
+
+let walletConnectProvider: WalletConnectProvider | null = null;
+
+const EVM_CHAINS = [1, 10, 56, 137, 8453, 42161, 43114] as const;
+
+/** CAIP-10 account ids (`eip155:1:0x…`) from a WalletConnect eip155 namespace. */
+export function pickSessionAccounts(caipAccounts: string[]): {
+  chainId: number;
+  addresses: string[];
+} | null {
+  const first = caipAccounts[0];
+  if (!first) return null;
+  const [, chainPart, address] = first.split(':');
+  const chainId = Number(chainPart);
+  if (!Number.isFinite(chainId) || chainId <= 0 || !address) return null;
+  const addresses = caipAccounts.flatMap((caip) => {
+    const parts = caip.split(':');
+    const id = Number(parts[1]);
+    const addr = parts[2];
+    return id === chainId && addr ? [addr] : [];
+  });
+  return addresses.length ? { chainId, addresses } : null;
+}
+
+function eip155Accounts(provider: WalletConnectProvider): string[] {
+  const namespaces = provider.session?.namespaces;
+  if (!namespaces) return [];
+  return Object.entries(namespaces)
+    .filter(([key]) => key === 'eip155' || key.startsWith('eip155:'))
+    .flatMap(([, value]) => value.accounts ?? []);
+}
+
+function syncWalletConnectChain(provider: WalletConnectProvider): void {
+  const picked = pickSessionAccounts(eip155Accounts(provider));
+  if (!picked) return;
+  provider.chainId = picked.chainId;
+  provider.accounts = picked.addresses;
+}
+
 const SMART_WALLET_HINT =
   'If this address is a smart-contract wallet (Safe, Argent, Coinbase Smart Wallet), ' +
   'it signs via EIP-1271, which can only be checked against an on-chain call. ' +
@@ -38,7 +80,11 @@ function isUserRejection(error: unknown): boolean {
   const code = (error as { code?: unknown } | null)?.code;
   if (code === 4001 || code === 'ACTION_REJECTED') return true;
   const message = error instanceof Error ? error.message.toLowerCase() : '';
-  return message.includes('user rejected') || message.includes('user denied');
+  return (
+    message.includes('user rejected') ||
+    message.includes('user denied') ||
+    message.includes('connection request reset')
+  );
 }
 
 function toReadableError(error: unknown, fallback: string): Error {
@@ -184,25 +230,37 @@ async function connectWalletConnect(): Promise<Connection> {
   // and nobody should pay for it just by opening the page.
   const { EthereumProvider } = await import('@walletconnect/ethereum-provider');
 
-  let provider: Awaited<ReturnType<typeof EthereumProvider.init>>;
-  try {
-    provider = await EthereumProvider.init({
+  if (!walletConnectProvider) {
+    walletConnectProvider = await EthereumProvider.init({
       projectId,
-      // Message signing is chain-agnostic; mainnet is only here because every
-      // EVM wallet supports it and the protocol requires a namespace.
+      // Required by this provider version, but kept to a single chain so the
+      // session proposal is small. The wallet’s actual chain is synced after
+      // connect — see syncWalletConnectChain.
       chains: [1],
-      optionalChains: [1, 10, 56, 137, 8453, 42161, 43114],
+      optionalChains: [...EVM_CHAINS],
       methods: ['personal_sign'],
+      optionalMethods: ['personal_sign', 'eth_sign', 'eth_requestAccounts', 'eth_accounts'],
       events: ['accountsChanged', 'chainChanged'],
       showQrModal: true,
       metadata: {
         name: 'Proof of Ownership',
         description: 'Sign and verify wallet messages entirely in your browser.',
         url: window.location.origin,
-        icons: [`${window.location.origin}/icon.svg`],
+        icons: [`${window.location.origin}/apple-touch-icon.png`],
       },
     });
-    await provider.enable();
+    walletConnectProvider.on('disconnect', () => {
+      walletConnectProvider = null;
+    });
+  }
+
+  const provider = walletConnectProvider;
+  try {
+    // `enable()` follows connect with `eth_requestAccounts`, which many mobile
+    // wallets surface as a second “sign” and then never answer. `connect()`
+    // already fills `provider.accounts` from the approved session.
+    if (!provider.session) await provider.connect();
+    syncWalletConnectChain(provider);
   } catch (error) {
     throw toReadableError(error, 'Could not establish a WalletConnect session.');
   }
@@ -218,9 +276,11 @@ async function connectWalletConnect(): Promise<Connection> {
     address: getAddress(account),
     async signMessage(message: string): Promise<string> {
       try {
+        syncWalletConnectChain(provider);
+        const from = provider.accounts[0] ?? account;
         const signature = await provider.request({
           method: 'personal_sign',
-          params: [toHex(message), account],
+          params: [toHex(message), from],
         });
         return String(signature);
       } catch (error) {
@@ -233,6 +293,7 @@ async function connectWalletConnect(): Promise<Connection> {
       } catch {
         // A session that is already gone is the outcome we wanted anyway.
       }
+      walletConnectProvider = null;
     },
   };
 }

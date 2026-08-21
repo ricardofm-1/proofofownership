@@ -726,6 +726,13 @@ main,
   backdrop-filter: blur(2px);
 }
 
+/* WalletConnect / Reown AppKit overlays. A native <dialog> still sits above
+   any z-index (top layer), so we also close our picker before opening this. */
+w3m-modal,
+wcm-modal {
+  z-index: 2147483647;
+}
+
 .wallet-dialog-head {
   display: flex;
   align-items: center;

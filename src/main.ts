@@ -300,16 +300,17 @@ async function openWalletDialog(): Promise<void> {
 
 async function chooseWallet(option: WalletOption): Promise<void> {
   walletDialogError.hidden = true;
+  // Close before the wallet UI appears. A modal <dialog> lives in the top
+  // layer, so WalletConnect’s QR sheet would otherwise render underneath it
+  // and look like the page had frozen.
+  walletDialog.close();
   try {
     state.connection = await adapter().connect(option.id);
-    walletDialog.close();
     paintConnection();
     signError.hidden = true;
   } catch (error) {
-    if (error instanceof UserRejectedError) {
-      walletDialog.close();
-      return;
-    }
+    if (error instanceof UserRejectedError) return;
+    walletDialog.showModal();
     showDialogError(error);
   }
 }
