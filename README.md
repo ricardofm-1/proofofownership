@@ -228,11 +228,16 @@ To enable it:
 
 1. Create a free project at [cloud.reown.com](https://cloud.reown.com) and copy
    the project ID.
-2. For local development, copy `.env.example` to `.env` and set
+2. Under the project's **Allowed domains**, add:
+   - `https://www.proofofownership.tech`
+   - `https://proofofownership.tech`
+   (`localhost` is allowed automatically.)
+3. For local development, copy `.env.example` to `.env` and set
    `VITE_WALLETCONNECT_PROJECT_ID`.
-3. For deployment, add the same value as a GitHub Actions secret named
+4. For deployment, add the same value as a GitHub Actions secret named
    `VITE_WALLETCONNECT_PROJECT_ID` under **Settings → Secrets and variables →
-   Actions**.
+   Actions**, then re-run the **Deploy to GitHub Pages** workflow so the live
+   site is built with the ID.
 
 The ID is a public client identifier, not a secret in the cryptographic sense —
 it ends up in the built JavaScript, as it does for every WalletConnect site.
