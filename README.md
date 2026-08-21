@@ -8,7 +8,7 @@ minus the publish step — and without a server. There is no backend, no databas
 no analytics and nothing is ever stored. The whole thing is HTML, CSS and
 JavaScript running in your browser.
 
-Supported today: **Ethereum** (and any EVM address) and **Solana**.
+Supported today: **Ethereum** (and any EVM address), **Solana** and **Bitcoin**.
 
 ## Why it is safe
 
@@ -50,15 +50,19 @@ the maths allows:
 
 - a signature of the wrong length or encoding is reported as malformed, with the
   actual byte count;
-- a well-formed Ethereum signature that belongs to someone else shows the
-  address it *was* signed by, recovered from the signature itself;
+- a well-formed Ethereum or Bitcoin signature that belongs to someone else shows
+  the address it *was* signed by, recovered from the signature itself;
 - if it fails, and the address might be a smart-contract wallet, you get a note
-  saying so rather than a bare "invalid" (see [Limitations](#limitations)).
+  saying so rather than a bare "invalid" (see [Limitations](#limitations));
+- and where the answer genuinely cannot be computed here — a BIP-322 signature
+  over a multisig script, say — the result says *cannot be checked* rather than
+  *invalid*, because those are not the same claim.
 
 Input formats are handled leniently: Ethereum signatures with or without `0x`,
 in either case, in the 65-byte or the compact 64-byte
 [EIP-2098](https://eips.ethereum.org/EIPS/eip-2098) form; addresses in any
-checksum casing; Solana signatures in base58 or hex.
+checksum casing; Solana signatures in base58 or hex; Bitcoin signatures in
+either signing standard, detected automatically.
 
 Message content, by contrast, is never touched. Whitespace and line breaks are
 part of what was signed, so trimming them would change the answer.
@@ -69,10 +73,50 @@ part of what was signed, so trimming them would change the answer.
 | --- | --- |
 | Ethereum | Any injected wallet found via [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963) (MetaMask, Rabby, Coinbase Wallet, Brave…), plus WalletConnect for mobile |
 | Solana | Any wallet implementing the [Wallet Standard](https://github.com/wallet-standard/wallet-standard) (Phantom, Solflare, Backpack…) |
+| Bitcoin | Any wallet implementing the [Bitcoin Wallet Standard](https://github.com/ExodusMovement/bitcoin-wallet-standard) (Phantom, Magic Eden, Leather, recent OKX…), plus UniSat and older OKX builds via their injected provider |
 
 Wallet discovery uses the announcement protocols rather than reading
 `window.ethereum`, so having several extensions installed shows you all of them
 instead of whichever one won the race to patch the page.
+
+Bitcoin is discovered twice over, because the ecosystem is mid-migration.
+Wallet Standard is the current route and is tried first; Phantom has already
+deprecated its injected `window.phantom.bitcoin` provider. UniSat and older OKX
+builds still only expose a global, so those are probed as a fallback. A wallet
+found both ways is listed once, under its Wallet Standard entry.
+
+Bitcoin wallets often expose more than one account — Phantom separates a payment
+address from an ordinals one. The payment address is chosen for signing, since
+that is the one people mean by "my Bitcoin address".
+
+## Bitcoin has two signing standards
+
+Ethereum and Solana each have one way to sign a message. Bitcoin has two, and
+which one applies depends on the address:
+
+- **[BIP-137](https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki)**,
+  the legacy "Bitcoin Signed Message" format produced by Bitcoin Core's
+  `signmessage`, Electrum and most hardware wallets. A 65-byte recoverable ECDSA
+  signature over the magic-prefixed message. The public key is recovered from
+  the signature, so verifying needs nothing but the address.
+- **[BIP-322](https://github.com/bitcoin/bips/blob/master/bip-0322.mediawiki)**,
+  finalised as 1.0.0 in April 2026 and what modern browser wallets emit. Rather
+  than hashing the message, it builds two virtual transactions — a `to_spend`
+  that commits to the message and a `to_sign` that spends it — and the signature
+  is the witness stack satisfying them. Neither transaction can be broadcast:
+  `to_spend` spends an output that cannot exist.
+
+You do not have to know which you have. Both arrive base64-encoded, and the two
+are told apart by length and by the `smp`/`ful`/`pof` prefix that BIP-322 1.0.0
+introduced. Signing picks the standard your address can actually be verified
+under — BIP-137 for `1…` and `3…`, BIP-322 for `bc1…`.
+
+Coverage is BIP-137 for all four address types, and BIP-322 *simple* for P2WPKH
+and key-path taproot. The *full* and *proof-of-funds* variants, and simple
+signatures over scripted addresses such as multisig, need a complete Bitcoin
+script interpreter; those report **cannot be checked** instead of a verdict. The
+BIP itself defines this "inconclusive" outcome for validators without an
+interpreter, and it is the honest answer — such a signature may well be valid.
 
 ## Running it locally
 
@@ -140,10 +184,16 @@ to read:
 | [`viem`](https://viem.sh) | EIP-191 signing requests and signature recovery |
 | [`tweetnacl`](https://tweetnacl.js.org) | ed25519 verification for Solana |
 | [`bs58`](https://github.com/cryptocoinjs/bs58) | base58 encoding |
+| [`@noble/curves`](https://github.com/paulmillr/noble-curves) | secp256k1 key recovery and Schnorr verification for Bitcoin |
+| [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) | SHA-256 and RIPEMD-160 |
+| [`@scure/base`](https://github.com/paulmillr/scure-base) | base58check, bech32 and bech32m |
 | [`@walletconnect/ethereum-provider`](https://docs.reown.com) | WalletConnect sessions, loaded on demand |
 
 EIP-6963 and Wallet Standard discovery are implemented directly, in about forty
-lines each, rather than pulled in as packages.
+lines each, rather than pulled in as packages. So are Bitcoin's transaction
+serialisation and the BIP-143 and BIP-341 sighash algorithms, which is why there
+is no `bitcoinjs-lib` in that table: only the message-signing subset is needed,
+and it is short enough to read in one sitting.
 
 `package.json` pins `axios` through an `overrides` entry. It arrives several
 levels down the WalletConnect dependency tree, and the version resolved by
@@ -174,10 +224,12 @@ and format hints off the adapter, so it needs no changes.
 ```
 src/
   chains/       adapters — the only chain-aware code
+    bitcoin/    address encoding, BIP-137, BIP-322, wallet shims
   wallets/      EIP-6963 and Wallet Standard discovery
-  lib/          share links, clipboard, DOM helpers
+  lib/          share links, clipboard, byte and DOM helpers
   main.ts       UI wiring
-test/           offline verification tests with fixed vectors
+test/           offline verification tests
+  vectors/      published vectors, vendored — see the README there
 ```
 
 ## Limitations
@@ -192,9 +244,14 @@ whenever an Ethereum check fails.
 **Ethereum only covers `personal_sign`.** EIP-712 typed-data signatures are a
 different scheme and are not handled.
 
+**Bitcoin scripted addresses cannot be decided here.** Multisig and script-path
+taproot signatures need a full script interpreter; they are reported as
+*cannot be checked* rather than judged. Same for BIP-322's `ful` and `pof`
+variants.
+
 ## Roadmap
 
-- Bitcoin — BIP-137 and [BIP-322](https://github.com/bitcoin/bips/blob/master/bip-0322.mediawiki)
+- BIP-322 `full` variant and a script interpreter for multisig addresses
 - XRP Ledger
 - Cardano — CIP-8 signing over CIP-30 wallets
 - EIP-1271 verification as an explicit, opt-in mode that clearly announces the

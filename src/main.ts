@@ -427,6 +427,22 @@ function renderVerdict(outcome: VerifyOutcome, active: ChainAdapter): void {
     return;
   }
 
+  if (outcome.status === 'unsupported') {
+    verifyResult.className = 'verdict is-unsupported';
+    body.append(verdictHeadline('Cannot be checked here'));
+    body.append(verdictParagraph('verdict-detail', outcome.reason));
+    body.append(
+      verdictParagraph(
+        'verdict-detail',
+        'This is not a verdict on the signature — it may well be genuine. This tool simply ' +
+          'cannot prove it either way.',
+      ),
+    );
+    if (outcome.hint) body.append(verdictParagraph('verdict-note', outcome.hint));
+    verifyResult.append(body);
+    return;
+  }
+
   verifyResult.className = 'verdict is-invalid';
 
   if (outcome.status === 'malformed') {

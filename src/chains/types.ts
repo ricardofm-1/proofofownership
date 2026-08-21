@@ -8,7 +8,7 @@
  * `signMessage`).
  */
 
-export type ChainId = 'ethereum' | 'solana';
+export type ChainId = 'ethereum' | 'solana' | 'bitcoin';
 
 /** A wallet the user could pick for the currently selected chain. */
 export interface WalletOption {
@@ -53,6 +53,17 @@ export type VerifyOutcome =
       status: 'malformed';
       reason: string;
       field: 'address' | 'signature' | 'message';
+    }
+  /**
+   * The input is well-formed but this tool cannot decide it — for example a
+   * BIP-322 signature over a multisig script, which needs a full Bitcoin
+   * script interpreter. Saying so is the honest answer; calling it invalid
+   * would be a false negative on a possibly genuine proof.
+   */
+  | {
+      status: 'unsupported';
+      reason: string;
+      hint?: string | undefined;
     };
 
 export interface VerifyInput {

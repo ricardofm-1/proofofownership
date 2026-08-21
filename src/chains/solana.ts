@@ -3,7 +3,7 @@ import nacl from 'tweetnacl';
 
 import {
   discoverSolanaWallets,
-  getSolanaWalletByName,
+  getStandardWalletByName,
   type StandardWallet,
 } from '../wallets/walletStandard.ts';
 import {
@@ -77,10 +77,10 @@ function walletOptionId(wallet: StandardWallet): string {
 
 async function connectStandardWallet(walletId: string): Promise<Connection> {
   const name = walletId.replace(/^standard:/, '');
-  let wallet = getSolanaWalletByName(name);
+  let wallet = getStandardWalletByName(name, 'solana:signMessage');
   if (!wallet) {
     await discoverSolanaWallets();
-    wallet = getSolanaWalletByName(name);
+    wallet = getStandardWalletByName(name, 'solana:signMessage');
   }
   if (!wallet) {
     throw new WalletError(

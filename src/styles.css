@@ -626,6 +626,16 @@ main,
   color: var(--invalid);
 }
 
+/* Neither pass nor fail: the tool declines to rule on the signature. */
+.verdict.is-unsupported {
+  background: var(--caution-soft);
+  border-color: var(--caution);
+}
+
+.verdict.is-unsupported .verdict-headline {
+  color: var(--caution);
+}
+
 /* The one flourish: a valid result is embossed like a stamped certificate. */
 .verdict.is-valid::before {
   content: '';
