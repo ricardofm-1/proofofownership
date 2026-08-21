@@ -8,7 +8,8 @@ minus the publish step — and without a server. There is no backend, no databas
 no analytics and nothing is ever stored. The whole thing is HTML, CSS and
 JavaScript running in your browser.
 
-Supported today: **Ethereum** (and any EVM address), **Solana** and **Bitcoin**.
+Supported today: **Ethereum** (and any EVM address), **Solana**, **Bitcoin** and
+the **XRP Ledger**.
 
 ## Why it is safe
 
@@ -50,8 +51,8 @@ the maths allows:
 
 - a signature of the wrong length or encoding is reported as malformed, with the
   actual byte count;
-- a well-formed Ethereum or Bitcoin signature that belongs to someone else shows
-  the address it *was* signed by, recovered from the signature itself;
+- a well-formed signature that belongs to someone else shows the address it
+  *was* signed by, wherever the chain allows that to be worked out;
 - if it fails, and the address might be a smart-contract wallet, you get a note
   saying so rather than a bare "invalid" (see [Limitations](#limitations));
 - and where the answer genuinely cannot be computed here — a BIP-322 signature
@@ -62,7 +63,8 @@ Input formats are handled leniently: Ethereum signatures with or without `0x`,
 in either case, in the 65-byte or the compact 64-byte
 [EIP-2098](https://eips.ethereum.org/EIPS/eip-2098) form; addresses in any
 checksum casing; Solana signatures in base58 or hex; Bitcoin signatures in
-either signing standard, detected automatically.
+either signing standard, detected automatically; XRP Ledger transactions as hex
+in any case, and addresses in classic `r…` or tagged `X…` form.
 
 Message content, by contrast, is never touched. Whitespace and line breaks are
 part of what was signed, so trimming them would change the answer.
@@ -74,6 +76,7 @@ part of what was signed, so trimming them would change the answer.
 | Ethereum | Any injected wallet found via [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963) (MetaMask, Rabby, Coinbase Wallet, Brave…), plus WalletConnect for mobile |
 | Solana | Any wallet implementing the [Wallet Standard](https://github.com/wallet-standard/wallet-standard) (Phantom, Solflare, Backpack…) |
 | Bitcoin | Any wallet implementing the [Bitcoin Wallet Standard](https://github.com/ExodusMovement/bitcoin-wallet-standard) (Phantom, Magic Eden, Leather, recent OKX…), plus UniSat and older OKX builds via their injected provider |
+| XRP Ledger | Crossmark. Any other XRPL wallet works through the Verify tab — see [below](#the-xrp-ledger-has-no-message-signing-standard) |
 
 Wallet discovery uses the announcement protocols rather than reading
 `window.ethereum`, so having several extensions installed shows you all of them
@@ -117,6 +120,45 @@ signatures over scripted addresses such as multisig, need a complete Bitcoin
 script interpreter; those report **cannot be checked** instead of a verdict. The
 BIP itself defines this "inconclusive" outcome for validators without an
 interpreter, and it is the honest answer — such a signature may well be valid.
+
+## The XRP Ledger has no message-signing standard
+
+Ethereum has EIP-191, Bitcoin has BIP-137 and BIP-322, Solana signs raw bytes.
+The XRP Ledger has nothing equivalent, and the schemes in the wild genuinely
+disagree: Ripple's own wallet service documents a `\x19XRP Ledger Signed
+Message:` prefix hashed with **keccak256**, GemWallet's `signMessage` documents
+its return value but never says what preimage goes under the signature, and
+Xaman signs a `SignIn` pseudo-transaction instead of any plaintext at all.
+Guessing between them would mean shipping a verifier that could call a genuine
+proof invalid.
+
+What *is* specified exactly, and is what every XRPL key already does, is
+transaction signing. So a proof here is an ordinary signed transaction carrying
+the message in a memo — the same manoeuvre BIP-322 makes on Bitcoin, and for the
+same reason. Verifying one is arithmetic: parse the transaction, drop the
+signature fields, prepend rippled's `STX\0` prefix, and check the signature over
+the result. Both XRPL signing algorithms are supported, secp256k1 and ed25519.
+
+This also explains why the signature field wants a whole transaction rather than
+64 bytes. An XRPL address is a hash of a public key, and neither signature type
+can be reversed to recover it — ed25519 is not recoverable at all, and XRPL's
+secp256k1 signatures are DER-encoded rather than the recoverable form Ethereum
+and BIP-137 use. The public key has to be published somewhere, and inside the
+signed transaction is exactly where the protocol already puts it.
+
+The transaction this tool asks a wallet to sign is an `AccountSet` that changes
+no settings, built so it cannot be broadcast even by someone who intercepts it:
+its fee of zero is below the network minimum, and a `LastLedgerSequence` of zero
+expired before any ledger that could have included it. Two independent reasons,
+so a wallet that helpfully rewrites one of them still cannot turn a proof into a
+live transaction.
+
+Two situations get **cannot be checked** rather than a verdict, both because
+settling them needs the ledger and verification here is offline by design. A
+multi-signed transaction is authorised by a quorum listed in the account's
+signer list; and XRPL lets an account delegate signing to a *regular key*, so a
+valid signature from a key that does not hash to the account may be perfectly
+legitimate or may be someone else's entirely. Only the ledger knows which.
 
 ## Running it locally
 
@@ -184,16 +226,17 @@ to read:
 | [`viem`](https://viem.sh) | EIP-191 signing requests and signature recovery |
 | [`tweetnacl`](https://tweetnacl.js.org) | ed25519 verification for Solana |
 | [`bs58`](https://github.com/cryptocoinjs/bs58) | base58 encoding |
-| [`@noble/curves`](https://github.com/paulmillr/noble-curves) | secp256k1 key recovery and Schnorr verification for Bitcoin |
-| [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) | SHA-256 and RIPEMD-160 |
-| [`@scure/base`](https://github.com/paulmillr/scure-base) | base58check, bech32 and bech32m |
+| [`@noble/curves`](https://github.com/paulmillr/noble-curves) | secp256k1 key recovery and Schnorr verification for Bitcoin, secp256k1 and ed25519 verification for the XRP Ledger |
+| [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) | SHA-256, SHA-512 and RIPEMD-160 |
+| [`@scure/base`](https://github.com/paulmillr/scure-base) | base58check, bech32, bech32m and Ripple's base58 alphabet |
 | [`@walletconnect/ethereum-provider`](https://docs.reown.com) | WalletConnect sessions, loaded on demand |
 
 EIP-6963 and Wallet Standard discovery are implemented directly, in about forty
 lines each, rather than pulled in as packages. So are Bitcoin's transaction
-serialisation and the BIP-143 and BIP-341 sighash algorithms, which is why there
-is no `bitcoinjs-lib` in that table: only the message-signing subset is needed,
-and it is short enough to read in one sitting.
+serialisation and the BIP-143 and BIP-341 sighash algorithms, and the XRPL
+binary format — which is why neither `bitcoinjs-lib` nor `xrpl` appears in that
+table. Only the subset each proof needs is required, and it is short enough to
+read in one sitting.
 
 `package.json` pins `axios` through an `overrides` entry. It arrives several
 levels down the WalletConnect dependency tree, and the version resolved by
@@ -225,6 +268,7 @@ and format hints off the adapter, so it needs no changes.
 src/
   chains/       adapters — the only chain-aware code
     bitcoin/    address encoding, BIP-137, BIP-322, wallet shims
+    xrpl/       address encoding, binary transaction reader, proof checking
   wallets/      EIP-6963 and Wallet Standard discovery
   lib/          share links, clipboard, byte and DOM helpers
   main.ts       UI wiring
@@ -249,10 +293,16 @@ taproot signatures need a full script interpreter; they are reported as
 *cannot be checked* rather than judged. Same for BIP-322's `ful` and `pof`
 variants.
 
+**XRPL regular keys and multi-signing cannot be decided here.** Both are settled
+by state that only the ledger holds, so both report *cannot be checked*. Signing
+is currently wired up for Crossmark alone; every other XRPL wallet still works
+through the Verify tab, since any signed transaction carrying the message in a
+memo is a valid proof regardless of what produced it.
+
 ## Roadmap
 
 - BIP-322 `full` variant and a script interpreter for multisig addresses
-- XRP Ledger
+- GemWallet and Xaman signing for the XRP Ledger
 - Cardano — CIP-8 signing over CIP-30 wallets
 - EIP-1271 verification as an explicit, opt-in mode that clearly announces the
   RPC call it needs to make
