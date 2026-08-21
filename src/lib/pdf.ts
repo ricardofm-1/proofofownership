@@ -356,7 +356,7 @@ function drawNotes(painter: Painter, input: ProofCertificate): void {
   const generated = input.generatedAt.toISOString().replace(/\.\d{3}Z$/, 'Z');
   const notes = [
     `Document generated ${generated}. That is when this file was written, not when the message was signed.`,
-    'Signature verification performed by this tool is informational only and does not constitute proof of identity, ownership, or authorization for any legal purpose. Re-verify independently before relying on the result.',
+    'www.proofofownership.com',
   ];
   if (painter.substituted) {
     notes.unshift(
