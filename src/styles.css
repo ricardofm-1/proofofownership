@@ -10,13 +10,43 @@
    request, which keeps the "verification touches nothing" promise literal.
    ─────────────────────────────────────────────────────────────────────────── */
 
+/* Dark is the default, so it lives on :root rather than behind a media query.
+   That way the page is already the right colour on first paint, with no flash
+   and no dependency on JavaScript having run. Light is the opt-in, applied by
+   an attribute the theme control sets. */
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
   --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
     'Helvetica Neue', Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
     'Liberation Mono', monospace;
+
+  --bg: #0c0d0f;
+  --surface: #141619;
+  --surface-sunken: #101215;
+  --ink: #e9eaec;
+  --ink-muted: #9aa0a9;
+  --ink-faint: #6c727b;
+  --line: #24272c;
+  --line-strong: #363a41;
+  --focus: #6ba4f8;
+
+  --valid: #4cd08a;
+  --valid-soft: #10231a;
+  --valid-line: #22503a;
+  --invalid: #ff8175;
+  --invalid-soft: #251312;
+  --invalid-line: #55302c;
+  --caution: #e0b264;
+  --caution-soft: #241d10;
+
+  --radius: 4px;
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 28px -20px rgb(0 0 0 / 80%);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
 
   --bg: #f2f2ef;
   --surface: #fbfbfa;
@@ -37,33 +67,7 @@
   --caution: #7a5310;
   --caution-soft: #f8f1e2;
 
-  --radius: 4px;
   --shadow: 0 1px 2px rgb(16 17 21 / 6%), 0 8px 24px -18px rgb(16 17 21 / 40%);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0c0d0f;
-    --surface: #141619;
-    --surface-sunken: #101215;
-    --ink: #e9eaec;
-    --ink-muted: #9aa0a9;
-    --ink-faint: #6c727b;
-    --line: #24272c;
-    --line-strong: #363a41;
-    --focus: #6ba4f8;
-
-    --valid: #4cd08a;
-    --valid-soft: #10231a;
-    --valid-line: #22503a;
-    --invalid: #ff8175;
-    --invalid-soft: #251312;
-    --invalid-line: #55302c;
-    --caution: #e0b264;
-    --caution-soft: #241d10;
-
-    --shadow: 0 1px 2px rgb(0 0 0 / 40%), 0 8px 28px -20px rgb(0 0 0 / 80%);
-  }
 }
 
 *,
@@ -74,6 +78,7 @@
 
 html {
   -webkit-text-size-adjust: 100%;
+  background: var(--bg);
 }
 
 /* Layout rules below set `display` on the same elements the app toggles with
@@ -186,6 +191,13 @@ main,
   font-size: 0.8125rem;
 }
 
+.header-aside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .assurance {
   display: inline-flex;
   align-items: center;
@@ -258,6 +270,13 @@ main,
   color: var(--ink-muted);
   cursor: pointer;
   transition: background 120ms ease, color 120ms ease;
+}
+
+/* Header-sized variant: the theme control is a preference, not a step in the
+   task, so it should not carry the same weight as the chain and mode rows. */
+.segmented-compact .segment {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
 }
 
 .segment:hover {

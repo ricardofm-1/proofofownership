@@ -21,10 +21,12 @@ import {
   type Proof,
   type Tab,
 } from './lib/share.ts';
+import { applyTheme, readTheme, storeTheme, type Theme } from './lib/theme.ts';
 
 // ── Elements ───────────────────────────────────────────────────────────────
 
 const chainSelector = el('#chain-selector');
+const themeSelector = el('#theme-selector');
 const tabButtons = elAll<HTMLButtonElement>('[role="tab"]');
 const panels: Record<Tab, HTMLElement> = {
   sign: el('#panel-sign'),
@@ -71,6 +73,7 @@ const walletDialogError = el('#wallet-dialog-error');
 interface State {
   chainId: ChainId;
   tab: Tab;
+  theme: Theme;
   connection: Connection | null;
   proof: Proof | null;
 }
@@ -78,6 +81,7 @@ interface State {
 const state: State = {
   chainId: defaultChainId,
   tab: 'sign',
+  theme: readTheme(),
   connection: null,
   proof: null,
 };
@@ -129,6 +133,23 @@ function paintChainCopy(): void {
   verifyAddressInput.placeholder = active.addressPlaceholder;
   verifySignatureInput.placeholder = active.signaturePlaceholder;
   verifySignatureHint.textContent = active.verifyHint;
+}
+
+// ── Theme ──────────────────────────────────────────────────────────────────
+
+function paintThemeSelector(): void {
+  for (const button of elAll<HTMLButtonElement>('[data-theme-choice]', themeSelector)) {
+    const selected = button.dataset['themeChoice'] === state.theme;
+    button.setAttribute('aria-checked', String(selected));
+    button.tabIndex = selected ? 0 : -1;
+  }
+}
+
+function setTheme(theme: Theme): void {
+  state.theme = theme;
+  applyTheme(theme);
+  storeTheme(theme);
+  paintThemeSelector();
 }
 
 // ── Tabs ───────────────────────────────────────────────────────────────────
@@ -525,12 +546,24 @@ paintChainCopy();
 setTab('sign');
 paintConnection();
 
+// Applied rather than set: writing storage here would leave a preference behind
+// for visitors who never touched the control.
+applyTheme(state.theme);
+paintThemeSelector();
+
 chainSelector.addEventListener('click', (event) => {
   const button = (event.target as Element).closest<HTMLElement>('[data-chain]');
   const chainId = button?.dataset['chain'];
   if (chainId) void setChain(chainId as ChainId);
 });
 wireRovingFocus(chainSelector, '[data-chain]');
+
+themeSelector.addEventListener('click', (event) => {
+  const button = (event.target as Element).closest<HTMLElement>('[data-theme-choice]');
+  const choice = button?.dataset['themeChoice'];
+  if (choice === 'dark' || choice === 'light') setTheme(choice);
+});
+wireRovingFocus(themeSelector, '[data-theme-choice]');
 
 for (const button of tabButtons) {
   button.addEventListener('click', () => setTab(button.dataset['tab'] as Tab));
