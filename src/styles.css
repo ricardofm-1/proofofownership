@@ -218,6 +218,9 @@ main,
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  /* Lets the group shrink below the natural width of its buttons instead of
+     pushing the page wider than the viewport. */
+  min-width: 0;
 }
 
 .control-label,
@@ -230,8 +233,13 @@ main,
   color: var(--ink-faint);
 }
 
+/* Wraps rather than overflowing: the chain row holds five options and does not
+   fit on one line on a phone, and a chain you cannot see is a chain you cannot
+   pick. */
 .segmented {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   padding: 3px;
   gap: 3px;
   background: var(--surface-sunken);
@@ -848,19 +856,22 @@ main,
   font-size: 0.8125rem;
 }
 
-/* Matches the explainer's heading so the two sections read as siblings. */
+/* Matches the explainer's heading so the two sections read as siblings, but
+   carries more weight and contrast: this one labels the legal text. */
 .site-footer h2 {
-  font-size: 0.6875rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink);
   margin-bottom: 0.9rem;
 }
 
+/* No measure cap here — the disclaimer spans the same column as the rest of
+   the page, and body padding keeps the gutters intact on narrow screens. */
 .site-footer p {
-  max-width: 80ch;
-  line-height: 1.65;
+  line-height: 1.7;
+  text-wrap: pretty;
 }
 
 .site-footer p + p {
