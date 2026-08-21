@@ -1,0 +1,8 @@
+# Allow every crawler. This is a static public tool; there is nothing to hide
+# from an indexer and no private area to fence off. diag.html is a local
+# wallet-detection scratch page and is not part of the product.
+User-agent: *
+Allow: /
+Disallow: /diag.html
+
+Sitemap: https://ricardofm-1.github.io/proofofownership/sitemap.xml

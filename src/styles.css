@@ -180,18 +180,26 @@ main,
   line-height: 1.25;
 }
 
-.wordmark-text strong {
+.wordmark-text h1 {
   font-size: 1.0625rem;
   font-weight: 600;
   letter-spacing: -0.012em;
 }
 
-.wordmark-text span {
+.wordmark-text p {
   color: var(--ink-muted);
   font-size: 0.8125rem;
 }
 
 /* ── Controls ────────────────────────────────────────────────────────────── */
+
+.lead {
+  margin: 1.75rem 0 0;
+  max-width: 46rem;
+  color: var(--ink-muted);
+  font-size: 1.0625rem;
+  line-height: 1.55;
+}
 
 .controls {
   display: flex;

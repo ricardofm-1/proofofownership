@@ -1,15 +1,16 @@
 # Proof of Ownership
 
-A static web page for signing a message with a crypto wallet and for checking
-that a given message was signed by a given address.
+A static web page for **signing a message with a crypto wallet** and for
+**verifying** that a given message was signed by a given address — Bitcoin,
+Ethereum, Solana, Ripple (XRP Ledger) and Cardano.
+
+Live at
+[https://ricardofm-1.github.io/proofofownership/](https://ricardofm-1.github.io/proofofownership/).
 
 It does what Etherscan's "Verified Signatures" tool and Solscan's equivalent do,
 minus the publish step — and without a server. There is no backend, no database,
 no analytics and nothing is ever stored. The whole thing is HTML, CSS and
 JavaScript running in your browser.
-
-Supported today: **Ethereum** (and any EVM address), **Solana**, **Bitcoin**, the
-**XRP Ledger** and **Cardano**.
 
 ## Why it is safe
 

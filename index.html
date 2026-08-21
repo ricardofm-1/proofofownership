@@ -15,12 +15,64 @@
         // Storage can be unavailable or blocked; the dark default still applies.
       }
     </script>
-    <title>Proof of Ownership — sign &amp; verify wallet messages</title>
+    <title>Proof of Ownership — sign &amp; verify crypto wallet messages</title>
     <meta
       name="description"
-      content="Sign a message with your Ethereum, Solana, Bitcoin, XRP Ledger or Cardano wallet and verify signatures entirely in your browser. No server, no storage, no keys ever leave your wallet."
+      content="Sign a message with a Bitcoin, Ethereum, Solana, Ripple (XRP) or Cardano wallet and verify the signature in your browser. Proof of ownership with no server, no transaction and no keys leaving the wallet."
     />
+    <!-- Absolute URLs: crawlers and social previews cannot resolve relative ones. -->
+    <link rel="canonical" href="https://ricardofm-1.github.io/proofofownership/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:site_name" content="Proof of Ownership" />
+    <meta property="og:title" content="Proof of Ownership — sign &amp; verify crypto wallet messages" />
+    <meta
+      property="og:description"
+      content="Sign a message with a Bitcoin, Ethereum, Solana, Ripple (XRP) or Cardano wallet and verify the signature in your browser. No server, no fee, no keys leave the wallet."
+    />
+    <meta property="og:url" content="https://ricardofm-1.github.io/proofofownership/" />
+    <meta property="og:image" content="https://ricardofm-1.github.io/proofofownership/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta
+      property="og:image:alt"
+      content="Proof of Ownership — sign and verify Bitcoin, Ethereum, Solana, Ripple and Cardano wallet messages"
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Proof of Ownership — sign &amp; verify crypto wallet messages" />
+    <meta
+      name="twitter:description"
+      content="Sign a message with a Bitcoin, Ethereum, Solana, Ripple (XRP) or Cardano wallet and verify the signature in your browser."
+    />
+    <meta name="twitter:image" content="https://ricardofm-1.github.io/proofofownership/og.png" />
+    <meta name="theme-color" content="#0c0d0f" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Proof of Ownership",
+        "url": "https://ricardofm-1.github.io/proofofownership/",
+        "description": "Sign a message with a Bitcoin, Ethereum, Solana, Ripple (XRP) or Cardano wallet and verify the signature in the browser. A cryptographic proof of ownership with no server and no transaction.",
+        "applicationCategory": "FinanceApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires a JavaScript-capable browser. Signing uses an injected wallet; verification runs entirely client-side.",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Bitcoin message signing and verification (BIP-137, BIP-322)",
+          "Ethereum and EVM personal_sign (EIP-191)",
+          "Solana wallet message signing",
+          "XRP Ledger (Ripple) signed proof of ownership",
+          "Cardano CIP-8 / CIP-30 message signing",
+          "Client-side signature verification with no server"
+        ]
+      }
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
@@ -32,10 +84,10 @@
           <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-dasharray="2 2.4" />
           <path d="M11 16.2 L14.6 20 L21.4 12.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
         </svg>
-        <span class="wordmark-text">
-          <strong>Proof of Ownership</strong>
-          <span>Sign &amp; verify wallet messages</span>
-        </span>
+        <div class="wordmark-text">
+          <h1>Proof of Ownership</h1>
+          <p>Sign &amp; verify wallet messages</p>
+        </div>
       </div>
       <div
         class="segmented segmented-compact"
@@ -66,6 +118,12 @@
     </header>
 
     <main id="main">
+      <p class="lead">
+        Sign a message with a Bitcoin, Ethereum, Solana, Ripple (XRP Ledger) or Cardano
+        wallet, then verify the signature in your browser. A cryptographic proof of
+        ownership &mdash; no server, no transaction, no fee.
+      </p>
+
       <section class="controls" aria-label="Chain and mode">
         <div class="control">
           <span class="control-label" id="chain-label">Chain</span>
