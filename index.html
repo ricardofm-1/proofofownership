@@ -37,37 +37,31 @@
           <span>Sign &amp; verify wallet messages</span>
         </span>
       </div>
-      <div class="header-aside">
-        <p class="assurance">
-          <span class="dot" aria-hidden="true"></span>
-          Everything runs locally · nothing is uploaded or stored
-        </p>
-        <div
-          class="segmented segmented-compact"
-          role="radiogroup"
-          aria-label="Theme"
-          id="theme-selector"
+      <div
+        class="segmented segmented-compact"
+        role="radiogroup"
+        aria-label="Theme"
+        id="theme-selector"
+      >
+        <button
+          type="button"
+          class="segment"
+          role="radio"
+          data-theme-choice="dark"
+          aria-checked="true"
         >
-          <button
-            type="button"
-            class="segment"
-            role="radio"
-            data-theme-choice="dark"
-            aria-checked="true"
-          >
-            Dark
-          </button>
-          <button
-            type="button"
-            class="segment"
-            role="radio"
-            data-theme-choice="light"
-            aria-checked="false"
-            tabindex="-1"
-          >
-            Light
-          </button>
-        </div>
+          Dark
+        </button>
+        <button
+          type="button"
+          class="segment"
+          role="radio"
+          data-theme-choice="light"
+          aria-checked="false"
+          tabindex="-1"
+        >
+          Light
+        </button>
       </div>
     </header>
 
@@ -234,6 +228,41 @@
             <p>
               There is no backend, no database and no analytics. Shareable links keep the proof
               in the URL fragment, which browsers never transmit to a server.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="explainer" aria-labelledby="why-title">
+        <h2 id="why-title">Why it matters</h2>
+        <div class="explainer-grid">
+          <div>
+            <h3>Regulation</h3>
+            <p>
+              Proving control of a wallet is now a regulatory requirement, not a technical
+              curiosity. In the EU, MiCA sets the licensing framework for crypto-asset service
+              providers, while the Transfer of Funds Regulation governs what happens when those
+              providers deal with self-hosted wallets &mdash; requiring verification of customer
+              control for transfers above &euro;1,000. Comparable rules apply in over 70
+              jurisdictions under FATF Recommendation 16.
+            </p>
+          </div>
+          <div>
+            <h3>Compliance</h3>
+            <p>
+              If an exchange has ever asked you to prove you own an address before releasing a
+              withdrawal, this is what they meant. The requirement applies to deposits and
+              withdrawals alike, and a cryptographic ownership proof is one of the accepted
+              methods.
+            </p>
+          </div>
+          <div>
+            <h3>Independence</h3>
+            <p>
+              Signing a message is entirely off-chain: no transaction, no network fee, no funds
+              in motion &mdash; unlike a test transfer, which costs money, takes time, and leaves
+              a permanent public trace. You prove control of the key without ever exposing it,
+              and without waiting for a block.
             </p>
           </div>
         </div>
