@@ -5,7 +5,7 @@ A static web page for **signing a message with a crypto wallet** and for
 Ethereum, Solana, Ripple (XRP Ledger) and Cardano.
 
 Live at
-[https://ricardofm-1.github.io/proofofownership/](https://ricardofm-1.github.io/proofofownership/).
+[https://www.proofofownership.tech](https://www.proofofownership.tech).
 
 It does what Etherscan's "Verified Signatures" tool and Solscan's equivalent do,
 minus the publish step — and without a server. There is no backend, no database,
@@ -251,9 +251,29 @@ failing test blocks the deploy, on the principle that a broken verifier is worse
 than a stale one.
 
 The build uses relative asset paths, so the same artifact works from
-`https://<user>.github.io/<repo>/`, from a custom domain at the root, and from a
-local file. Routing is hash-based, so no server rewrite rules are needed and
-deep links survive a refresh.
+`https://www.proofofownership.tech`, from `https://<user>.github.io/<repo>/`,
+and from a local file. Routing is hash-based, so no server rewrite rules are
+needed and deep links survive a refresh.
+
+### Custom domain (Namecheap)
+
+The live hostname is `www.proofofownership.tech`. GitHub Pages is told that in
+[`public/CNAME`](public/CNAME). At Namecheap, under **Domain List → Manage →
+Advanced DNS**, the host records should be:
+
+| Type | Host | Value | TTL |
+| --- | --- | --- | --- |
+| A Record | `@` | `185.199.108.153` | Automatic |
+| A Record | `@` | `185.199.109.153` | Automatic |
+| A Record | `@` | `185.199.110.153` | Automatic |
+| A Record | `@` | `185.199.111.153` | Automatic |
+| CNAME Record | `www` | `ricardofm-1.github.io.` | Automatic |
+
+Delete any parking, URL-redirect, or leftover A/CNAME records for `@` or `www`
+first — they conflict. Nameservers should stay on **Namecheap BasicDNS**.
+
+After DNS answers (often under an hour, sometimes longer), GitHub issues a TLS
+certificate. Turn on **Settings → Pages → Enforce HTTPS** once it is ready.
 
 ## How it is put together
 

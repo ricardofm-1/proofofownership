@@ -5,4 +5,4 @@ User-agent: *
 Allow: /
 Disallow: /diag.html
 
-Sitemap: https://ricardofm-1.github.io/proofofownership/sitemap.xml
+Sitemap: https://www.proofofownership.tech/sitemap.xml
