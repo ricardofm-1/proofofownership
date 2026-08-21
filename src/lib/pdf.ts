@@ -174,11 +174,7 @@ function ensure(painter: Painter, needed: number): void {
   if (painter.y - needed < MARGIN + FOOTER) newPage(painter);
 }
 
-function drawStamp(painter: Painter, chainName: string): void {
-  const cx = PAGE.width - MARGIN - 46;
-  const cy = painter.y - 10;
-  const { page, fonts } = painter;
-
+function drawStamp(page: PDFPage, fonts: Fonts, cx: number, cy: number, chainName: string): void {
   page.drawCircle({
     x: cx,
     y: cy,
@@ -229,12 +225,15 @@ function drawBanner(painter: Painter, input: ProofCertificate): void {
 
   const prepared = prepare(detail);
   painter.substituted ||= prepared.substituted;
-  const detailWidth = GUTTER - (verified ? 110 : 28);
+  const stampRadius = 38;
+  const stampPad = 18;
+  const detailWidth = GUTTER - (verified ? stampRadius * 2 + stampPad * 2 : 28);
   const detailLines = wrapLines(prepared.text, detailWidth, (line) =>
     measure(painter.fonts.sans, 8.5, line),
   );
 
-  const height = 36 + detailLines.length * 11;
+  const textBlock = 20 + detailLines.length * 11;
+  const height = verified ? Math.max(textBlock + 24, stampRadius * 2 + stampPad * 2) : textBlock + 16;
   ensure(painter, height + 8);
   const { page, fonts } = painter;
   const y = painter.y - height;
@@ -258,15 +257,16 @@ function drawBanner(painter: Painter, input: ProofCertificate): void {
     });
   }
 
+  const textTop = y + (height + textBlock) / 2 - 4;
   page.drawText(title, {
     x: MARGIN + 14,
-    y: y + height - 18,
+    y: textTop,
     size: 13,
     font: fonts.sansBold,
     color: verified ? color.valid : color.ink,
   });
 
-  let detailY = y + height - 32;
+  let detailY = textTop - 14;
   for (const line of detailLines) {
     page.drawText(line, {
       x: MARGIN + 14,
@@ -278,7 +278,15 @@ function drawBanner(painter: Painter, input: ProofCertificate): void {
     detailY -= 11;
   }
 
-  if (verified) drawStamp(painter, input.chainName);
+  if (verified) {
+    drawStamp(
+      page,
+      fonts,
+      PAGE.width - MARGIN - stampPad - stampRadius,
+      y + height / 2,
+      input.chainName,
+    );
+  }
 
   painter.y = y - 18;
 }
@@ -355,7 +363,7 @@ function drawField(
 function drawNotes(painter: Painter, input: ProofCertificate): void {
   const generated = input.generatedAt.toISOString().replace(/\.\d{3}Z$/, 'Z');
   const notes = [
-    `Document generated ${generated}. That is when this file was written, not when the message was signed.`,
+    `Document generated ${generated}.`,
     'www.proofofownership.com',
   ];
   if (painter.substituted) {
