@@ -22,6 +22,7 @@ import {
   type Tab,
 } from './lib/share.ts';
 import { applyTheme, readTheme, storeTheme, type Theme } from './lib/theme.ts';
+import type { ProofCertificate, ProofKind } from './lib/certificate.ts';
 
 // ── Elements ───────────────────────────────────────────────────────────────
 
@@ -53,6 +54,7 @@ const resultMessage = el('#result-message');
 const resultSignature = el('#result-signature');
 const copyJsonButton = el<HTMLButtonElement>('#copy-json-button');
 const copyLinkButton = el<HTMLButtonElement>('#copy-link-button');
+const downloadSignPdfButton = el<HTMLButtonElement>('#download-sign-pdf-button');
 const openVerifyButton = el<HTMLButtonElement>('#open-verify-button');
 
 const verifyAddressInput = el<HTMLInputElement>('#verify-address');
@@ -444,6 +446,14 @@ function renderVerdict(outcome: VerifyOutcome, active: ChainAdapter): void {
         `Checked with ${active.signingStandard}, entirely in this browser. No request left your device.`,
       ),
     );
+
+    const pdfButton = document.createElement('button');
+    pdfButton.type = 'button';
+    pdfButton.className = 'button';
+    pdfButton.textContent = 'Download PDF';
+    pdfButton.addEventListener('click', () => void saveCertificate('verified', pdfButton));
+    body.append(pdfButton);
+
     verifyResult.append(body, certificateStamp(active.name));
     return;
   }
@@ -604,6 +614,8 @@ copyLinkButton.addEventListener('click', () => {
   if (state.proof) void copyAndFlash(copyLinkButton, buildShareUrl(state.proof));
 });
 
+downloadSignPdfButton.addEventListener('click', () => void saveCertificate('signed', downloadSignPdfButton));
+
 openVerifyButton.addEventListener('click', () => {
   if (!state.proof) return;
   fillVerifyForm(state.proof);
@@ -631,6 +643,59 @@ window.addEventListener('hashchange', () => void applyHash());
 async function copyAndFlash(button: HTMLButtonElement, text: string): Promise<void> {
   const copied = await copyText(text);
   flashButton(button, copied ? 'Copied' : 'Press ⌘C');
+}
+
+function certificateFromUi(kind: ProofKind): ProofCertificate | null {
+  const active = adapter();
+  if (kind === 'signed') {
+    const proof = state.proof;
+    if (!proof) return null;
+    return {
+      kind,
+      chainId: proof.chain,
+      chainName: getAdapter(proof.chain).name,
+      signingStandard: getAdapter(proof.chain).signingStandard,
+      address: proof.address,
+      message: proof.message,
+      signature: proof.signature,
+      generatedAt: new Date(),
+    };
+  }
+
+  const address = verifyAddressInput.value;
+  const message = verifyMessageInput.value;
+  const signature = verifySignatureInput.value;
+  if (!address || !signature) return null;
+  return {
+    kind: 'verified',
+    chainId: state.chainId,
+    chainName: active.name,
+    signingStandard: active.signingStandard,
+    address,
+    message,
+    signature,
+    generatedAt: new Date(),
+  };
+}
+
+async function saveCertificate(kind: ProofKind, button: HTMLButtonElement): Promise<void> {
+  const certificate = certificateFromUi(kind);
+  if (!certificate) return;
+  const original = button.textContent ?? 'Download PDF';
+  button.disabled = true;
+  button.textContent = 'Preparing PDF…';
+  try {
+    // Loaded on demand: the library is unused until someone asks for a file.
+    const { downloadProofPdf } = await import('./lib/pdf.ts');
+    await downloadProofPdf(certificate);
+    button.textContent = original;
+    flashButton(button, 'Saved');
+  } catch {
+    button.textContent = original;
+    flashButton(button, 'Failed');
+  } finally {
+    button.disabled = false;
+  }
 }
 
 void applyHash();

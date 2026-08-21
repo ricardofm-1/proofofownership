@@ -45,10 +45,13 @@ message and the signature as three separately copyable fields, plus:
 - **Copy shareable link** — a URL that opens the Verify tab pre-filled and
   checks the signature immediately. This is the no-storage replacement for
   Etherscan's "publish": the link *is* the proof.
+- **Download PDF** — a one-page (or more, if the signature is long) certificate
+  of the signed message, drawn in the site's light palette. Built in the
+  browser with [`pdf-lib`](https://pdf-lib.js.org); nothing is uploaded.
 
 **Verify** — paste an address, a message and a signature, press Verify. A valid
-result is stated plainly and stamped. An invalid one says *why*, as precisely as
-the maths allows:
+result is stated plainly and stamped, and can be downloaded as the same PDF.
+An invalid one says *why*, as precisely as the maths allows:
 
 - a signature of the wrong length or encoding is reported as malformed, with the
   actual byte count;
@@ -267,6 +270,7 @@ to read:
 | [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) | SHA-256, SHA-512, RIPEMD-160 and BLAKE2b |
 | [`@scure/base`](https://github.com/paulmillr/scure-base) | base58check, bech32, bech32m and Ripple's base58 alphabet |
 | [`@walletconnect/ethereum-provider`](https://docs.reown.com) | WalletConnect sessions, loaded on demand |
+| [`pdf-lib`](https://pdf-lib.js.org) | Proof PDFs, loaded on demand |
 
 EIP-6963, Wallet Standard and CIP-30 discovery are implemented directly, in
 about forty lines each, rather than pulled in as packages. So are Bitcoin's
@@ -282,7 +286,9 @@ levels down the WalletConnect dependency tree, and the version resolved by
 default carries open advisories; the override keeps `npm audit` clean.
 
 WalletConnect is behind a dynamic import: it is fetched only when someone
-actually chooses it, and never on the Verify path. First load is roughly 84 kB.
+actually chooses it, and never on the Verify path. The PDF library is the same
+idea: it is loaded only when **Download PDF** is pressed. First load is roughly
+84 kB.
 
 ### Adding a chain
 

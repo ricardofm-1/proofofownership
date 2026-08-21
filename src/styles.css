@@ -588,9 +588,9 @@ main,
   max-width: 58ch;
 }
 
-.verdict-detail code {
-  overflow-wrap: anywhere;
-  color: var(--ink);
+.verdict-body .button {
+  align-self: flex-start;
+  margin-top: 0.35rem;
 }
 
 .verdict-note {
