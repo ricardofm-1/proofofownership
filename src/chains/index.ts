@@ -10,9 +10,9 @@ import { xrplAdapter } from './xrpl/index.ts';
  * widening `ChainId`; the UI reads everything else off the adapter itself.
  */
 export const adapters: readonly ChainAdapter[] = [
+  bitcoinAdapter,
   ethereumAdapter,
   solanaAdapter,
-  bitcoinAdapter,
   xrplAdapter,
   cardanoAdapter,
 ];
