@@ -364,7 +364,7 @@ function drawNotes(painter: Painter, input: ProofCertificate): void {
   const generated = input.generatedAt.toISOString().replace(/\.\d{3}Z$/, 'Z');
   const notes = [
     `Document generated ${generated}.`,
-    'www.proofofownership.com',
+    'www.proofofownership.tech',
   ];
   if (painter.substituted) {
     notes.unshift(
