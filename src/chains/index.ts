@@ -17,7 +17,7 @@ export const adapters: readonly ChainAdapter[] = [
   cardanoAdapter,
 ];
 
-export const defaultChainId: ChainId = 'ethereum';
+export const defaultChainId: ChainId = 'bitcoin';
 
 export function getAdapter(id: ChainId): ChainAdapter {
   const adapter = adapters.find((candidate) => candidate.id === id);

@@ -10,4 +10,12 @@ export default defineConfig({
     target: 'es2022',
     sourcemap: true,
   },
+  server: {
+    // Filesystem events do not always reach the dev server — a sandboxed or
+    // containerised environment can block them outright — and the failure is
+    // silent: edits appear to do nothing while the browser is served the last
+    // transform. Polling is a little more work for the machine and much less
+    // for whoever would otherwise be debugging code that is not running.
+    watch: { usePolling: true, interval: 300 },
+  },
 });
