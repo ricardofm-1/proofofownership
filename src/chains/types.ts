@@ -1,14 +1,14 @@
 /**
  * The seam that keeps the UI chain-agnostic.
  *
- * Adding a chain (Cardano CIP-8, Cosmos ADR-036, …) should mean writing one
- * more module that satisfies `ChainAdapter` and registering it — no UI
- * changes. Everything the interface exposes is either pure local cryptography
+ * Adding a chain (Cosmos ADR-036, Polkadot, …) should mean writing one more
+ * module that satisfies `ChainAdapter` and registering it — no UI changes.
+ * Everything the interface exposes is either pure local cryptography
  * (`verify`) or an explicit user-initiated wallet interaction (`connect`,
  * `signMessage`).
  */
 
-export type ChainId = 'ethereum' | 'solana' | 'bitcoin' | 'xrpl';
+export type ChainId = 'ethereum' | 'solana' | 'bitcoin' | 'xrpl' | 'cardano';
 
 /** A wallet the user could pick for the currently selected chain. */
 export interface WalletOption {

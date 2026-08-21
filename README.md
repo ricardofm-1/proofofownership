@@ -8,8 +8,8 @@ minus the publish step — and without a server. There is no backend, no databas
 no analytics and nothing is ever stored. The whole thing is HTML, CSS and
 JavaScript running in your browser.
 
-Supported today: **Ethereum** (and any EVM address), **Solana**, **Bitcoin** and
-the **XRP Ledger**.
+Supported today: **Ethereum** (and any EVM address), **Solana**, **Bitcoin**, the
+**XRP Ledger** and **Cardano**.
 
 ## Why it is safe
 
@@ -64,7 +64,8 @@ in either case, in the 65-byte or the compact 64-byte
 [EIP-2098](https://eips.ethereum.org/EIPS/eip-2098) form; addresses in any
 checksum casing; Solana signatures in base58 or hex; Bitcoin signatures in
 either signing standard, detected automatically; XRP Ledger transactions as hex
-in any case, and addresses in classic `r…` or tagged `X…` form.
+in any case, and addresses in classic `r…` or tagged `X…` form; Cardano
+signatures as the wallet's own JSON object or as two bare hex strings.
 
 Message content, by contrast, is never touched. Whitespace and line breaks are
 part of what was signed, so trimming them would change the answer.
@@ -77,6 +78,7 @@ part of what was signed, so trimming them would change the answer.
 | Solana | Any wallet implementing the [Wallet Standard](https://github.com/wallet-standard/wallet-standard) (Phantom, Solflare, Backpack…) |
 | Bitcoin | Any wallet implementing the [Bitcoin Wallet Standard](https://github.com/ExodusMovement/bitcoin-wallet-standard) (Phantom, Magic Eden, Leather, recent OKX…), plus UniSat and older OKX builds via their injected provider |
 | XRP Ledger | Crossmark. Any other XRPL wallet works through the Verify tab — see [below](#the-xrp-ledger-has-no-message-signing-standard) |
+| Cardano | Any wallet implementing [CIP-30](https://cips.cardano.org/cip/CIP-30) (Lace, Eternl, Nami, Typhon, Vespr, Flint…) |
 
 Wallet discovery uses the announcement protocols rather than reading
 `window.ethereum`, so having several extensions installed shows you all of them
@@ -160,6 +162,40 @@ signer list; and XRPL lets an account delegate signing to a *regular key*, so a
 valid signature from a key that does not hash to the account may be perfectly
 legitimate or may be someone else's entirely. Only the ledger knows which.
 
+## Cardano signs a COSE structure, and names its own address
+
+Cardano has a real standard —
+[CIP-8](https://cips.cardano.org/cip/CIP-0008) message signing, reached through
+[CIP-30](https://cips.cardano.org/cip/CIP-30) wallets — but its shape differs
+from the others in two ways worth knowing.
+
+First, the signature does not cover the message directly. It covers a COSE
+`Sig_structure`: a CBOR array holding the string `Signature1`, the protected
+headers, an empty external-data field, and the payload. Verifying means
+rebuilding those bytes exactly, reusing the protected headers verbatim rather
+than re-encoding them, since a re-encoding differing by a single byte would
+compute a different signature over identical-looking data. The payload itself
+may be embedded or *detached*, and may be the message or its BLAKE2b-224 hash;
+all four combinations occur and all four are handled.
+
+Second, a wallet returns *two* values, `signature` and `key`, and both are
+needed. A Cardano address is a hash of its key, so the key cannot be recovered
+from a signature the way Ethereum's can. Paste the CIP-30 object exactly as the
+wallet gave it — `{ "signature": "84…", "key": "a4…" }` — or the two hex strings
+separated by a space.
+
+The subtle part is who the signature says you are. CIP-8 puts the signer's
+address in the protected headers, so it *is* signed and cannot be altered
+afterwards — but the signer chose it, which is not the same as it being true.
+Reading it at face value would let anyone sign a message naming your address and
+have it accepted. So the address is never trusted on its own: the public key is
+hashed and that hash must appear among the address's own credentials. Both of
+the rejection cases in the test fixtures exist for exactly this reason.
+
+Script addresses report **cannot be checked**. They are controlled by a script
+the ledger evaluates rather than by a key, so no single-key signature could
+prove control of one — and Byron-era addresses predate CIP-8 entirely.
+
 ## Running it locally
 
 ```bash
@@ -226,17 +262,19 @@ to read:
 | [`viem`](https://viem.sh) | EIP-191 signing requests and signature recovery |
 | [`tweetnacl`](https://tweetnacl.js.org) | ed25519 verification for Solana |
 | [`bs58`](https://github.com/cryptocoinjs/bs58) | base58 encoding |
-| [`@noble/curves`](https://github.com/paulmillr/noble-curves) | secp256k1 key recovery and Schnorr verification for Bitcoin, secp256k1 and ed25519 verification for the XRP Ledger |
-| [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) | SHA-256, SHA-512 and RIPEMD-160 |
+| [`@noble/curves`](https://github.com/paulmillr/noble-curves) | secp256k1 key recovery and Schnorr verification for Bitcoin, secp256k1 and ed25519 verification for the XRP Ledger and Cardano |
+| [`@noble/hashes`](https://github.com/paulmillr/noble-hashes) | SHA-256, SHA-512, RIPEMD-160 and BLAKE2b |
 | [`@scure/base`](https://github.com/paulmillr/scure-base) | base58check, bech32, bech32m and Ripple's base58 alphabet |
 | [`@walletconnect/ethereum-provider`](https://docs.reown.com) | WalletConnect sessions, loaded on demand |
 
-EIP-6963 and Wallet Standard discovery are implemented directly, in about forty
-lines each, rather than pulled in as packages. So are Bitcoin's transaction
-serialisation and the BIP-143 and BIP-341 sighash algorithms, and the XRPL
-binary format — which is why neither `bitcoinjs-lib` nor `xrpl` appears in that
-table. Only the subset each proof needs is required, and it is short enough to
-read in one sitting.
+EIP-6963, Wallet Standard and CIP-30 discovery are implemented directly, in
+about forty lines each, rather than pulled in as packages. So are Bitcoin's
+transaction serialisation and the BIP-143 and BIP-341 sighash algorithms, the
+XRPL binary format, and the slice of CBOR that COSE needs — which is why none of
+`bitcoinjs-lib`, `xrpl` or a CBOR library appears in that table. Only the subset
+each proof needs is required, and it is short enough to read in one sitting. The
+CBOR reader in particular accepts definite-length values only and errors on
+anything else, which is the behaviour you want from a verifier.
 
 `package.json` pins `axios` through an `overrides` entry. It arrives several
 levels down the WalletConnect dependency tree, and the version resolved by
@@ -269,6 +307,7 @@ src/
   chains/       adapters — the only chain-aware code
     bitcoin/    address encoding, BIP-137, BIP-322, wallet shims
     xrpl/       address encoding, binary transaction reader, proof checking
+    cardano/    address encoding, COSE_Sign1, CIP-30 wallets
   wallets/      EIP-6963 and Wallet Standard discovery
   lib/          share links, clipboard, byte and DOM helpers
   main.ts       UI wiring
@@ -299,11 +338,15 @@ is currently wired up for Crossmark alone; every other XRPL wallet still works
 through the Verify tab, since any signed transaction carrying the message in a
 memo is a valid proof regardless of what produced it.
 
+**Cardano script and Byron addresses cannot be decided here.** A script address
+is controlled by ledger-evaluated code rather than a key, and Byron addresses
+predate CIP-8; both report *cannot be checked*.
+
 ## Roadmap
 
 - BIP-322 `full` variant and a script interpreter for multisig addresses
 - GemWallet and Xaman signing for the XRP Ledger
-- Cardano — CIP-8 signing over CIP-30 wallets
+- Cosmos — ADR-036 signing
 - EIP-1271 verification as an explicit, opt-in mode that clearly announces the
   RPC call it needs to make
 - EIP-712 typed-data signatures

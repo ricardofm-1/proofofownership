@@ -1,11 +1,12 @@
 import { bitcoinAdapter } from './bitcoin/index.ts';
+import { cardanoAdapter } from './cardano/index.ts';
 import { ethereumAdapter } from './ethereum.ts';
 import { solanaAdapter } from './solana.ts';
 import type { ChainAdapter, ChainId } from './types.ts';
 import { xrplAdapter } from './xrpl/index.ts';
 
 /**
- * The adapter registry. Adding Cardano means appending one entry here and
+ * The adapter registry. Adding a chain means appending one entry here and
  * widening `ChainId`; the UI reads everything else off the adapter itself.
  */
 export const adapters: readonly ChainAdapter[] = [
@@ -13,6 +14,7 @@ export const adapters: readonly ChainAdapter[] = [
   solanaAdapter,
   bitcoinAdapter,
   xrplAdapter,
+  cardanoAdapter,
 ];
 
 export const defaultChainId: ChainId = 'ethereum';
