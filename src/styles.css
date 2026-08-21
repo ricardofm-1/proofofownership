@@ -855,6 +855,50 @@ wcm-modal {
   max-width: 44ch;
 }
 
+.exchange-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.75rem 2.5rem;
+}
+
+.exchange {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--radius);
+}
+
+.exchange img {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 0.35rem;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.exchange h3 {
+  font-size: 0.9375rem;
+}
+
+.exchange p {
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+  max-width: 44ch;
+}
+
+.exchange:hover h3,
+.exchange:focus-visible h3 {
+  color: var(--focus);
+}
+
+.exchange:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+}
+
 .site-footer {
   margin-top: 3rem;
   padding-top: 1.5rem;
