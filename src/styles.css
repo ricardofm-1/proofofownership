@@ -930,6 +930,12 @@ wcm-modal {
   margin-top: 0.75rem;
 }
 
+.site-footer a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
 @media (max-width: 40rem) {
   .verdict {
     flex-direction: column-reverse;
