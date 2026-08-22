@@ -296,6 +296,7 @@ to read:
 | [`@scure/base`](https://github.com/paulmillr/scure-base) | base58check, bech32, bech32m and Ripple's base58 alphabet |
 | [`@walletconnect/ethereum-provider`](https://docs.reown.com) | WalletConnect sessions, loaded on demand |
 | [`pdf-lib`](https://pdf-lib.js.org) | Proof PDFs, loaded on demand |
+| [`uqr`](https://github.com/unjs/uqr) | Donation-address QR codes, loaded on demand |
 
 EIP-6963, Wallet Standard and CIP-30 discovery are implemented directly, in
 about forty lines each, rather than pulled in as packages. So are Bitcoin's

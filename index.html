@@ -48,6 +48,60 @@
     <meta name="theme-color" content="#0c0d0f" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <!-- Linked here so the first paint is styled. main.ts also imports this
+         file; Vite treats both as the same module. -->
+    <link
+      rel="stylesheet"
+      href="/src/styles.css"
+      onload="document.documentElement.classList.add('is-booted')"
+    />
+    <style>
+      /* Covers the unstyled first paint so the header SVG cannot flash at
+         full viewport size while the stylesheet is still arriving. */
+      .boot {
+        position: fixed;
+        inset: 0;
+        z-index: 2147483646;
+        display: grid;
+        place-items: center;
+        background: #0c0d0f;
+      }
+      html[data-theme='light'] .boot {
+        background: #f2f2ef;
+      }
+      html.is-booted .boot {
+        display: none;
+      }
+      .boot-ring {
+        width: 36px;
+        height: 36px;
+        border: 2px solid #363a41;
+        border-top-color: #e9eaec;
+        border-radius: 50%;
+        animation: boot-spin 0.7s linear infinite;
+      }
+      html[data-theme='light'] .boot-ring {
+        border-color: #c6c6bf;
+        border-top-color: #16171b;
+      }
+      @keyframes boot-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-ring {
+          animation: none;
+        }
+      }
+    </style>
+    <noscript>
+      <style>
+        .boot {
+          display: none !important;
+        }
+      </style>
+    </noscript>
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -75,11 +129,14 @@
     </script>
   </head>
   <body>
+    <div class="boot" aria-hidden="true">
+      <div class="boot-ring"></div>
+    </div>
     <a class="skip-link" href="#main">Skip to content</a>
 
     <header class="site-header">
       <div class="wordmark">
-        <svg class="mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <svg class="mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
           <circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" />
           <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-dasharray="2 2.4" />
           <path d="M11 16.2 L14.6 20 L21.4 12.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
@@ -419,6 +476,123 @@
           </a>
         </div>
       </section>
+
+      <section class="explainer" aria-labelledby="support-title" id="support">
+        <h2 id="support-title">Support the project</h2>
+        <div class="support-copy">
+          <p>
+            This tool was built by a member of the crypto community, for the community. It is
+            provided free of charge, without tracking or registration and it will remain so. The
+            source code is open and may be freely inspected, forked, and self-hosted by anyone at
+            request.
+          </p>
+          <p>
+            The project has no institutional backing and generates no revenue. Contributions from
+            users are entirely voluntary and are used to cover domain registration, development
+            time, and the ongoing work of extending support to additional blockchains and signing
+            standards.
+          </p>
+          <p>
+            If this tool has been useful to you, a donation to any of the addresses below is
+            genuinely appreciated. Contributions in code, issue reports, and translations are
+            equally welcome through the project repository.
+            Donations are voluntary, non-refundable, and confer no entitlement, service obligation,
+            warranty, or commercial relationship of any kind.
+          </p>
+        </div>
+        <svg class="icon-sprite" aria-hidden="true" focusable="false">
+          <symbol id="icon-copy" viewBox="0 0 16 16">
+            <rect x="5.5" y="5.5" width="8" height="8" rx="1.25" fill="none" stroke="currentColor" stroke-width="1.4" />
+            <path d="M10.5 5.5V4.25A1.25 1.25 0 0 0 9.25 3h-6A1.25 1.25 0 0 0 2 4.25v6A1.25 1.25 0 0 0 3.25 11.5H4.5" fill="none" stroke="currentColor" stroke-width="1.4" />
+          </symbol>
+          <symbol id="icon-copied" viewBox="0 0 16 16">
+            <path d="M3.4 8.3 6.5 11.3 12.7 4.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" />
+          </symbol>
+          <symbol id="icon-qr" viewBox="0 0 16 16">
+            <rect x="2" y="2" width="5" height="5" rx="0.6" fill="none" stroke="currentColor" stroke-width="1.35" />
+            <rect x="9" y="2" width="5" height="5" rx="0.6" fill="none" stroke="currentColor" stroke-width="1.35" />
+            <rect x="2" y="9" width="5" height="5" rx="0.6" fill="none" stroke="currentColor" stroke-width="1.35" />
+            <path d="M9 9.2h2.2V11H9zM12.3 9.2H14V14h-4.8v-1.7h1.4V11h1.7z" fill="currentColor" />
+          </symbol>
+        </svg>
+        <ul class="donate-list">
+          <li class="donate">
+            <h3>Bitcoin</h3>
+            <div class="donate-row">
+              <div class="donate-field">
+                <code class="mono">bc1qeywc96rfefjr4220zewj9zxmds4yz0ctl0h63z</code>
+                <button type="button" class="donate-icon" data-donate-copy aria-label="Copy address">
+                  <svg><use href="#icon-copy" /></svg>
+                  <svg class="icon-copied"><use href="#icon-copied" /></svg>
+                </button>
+              </div>
+              <button type="button" class="donate-icon donate-icon-standout" data-donate-qr aria-label="Show QR code">
+                <svg><use href="#icon-qr" /></svg>
+              </button>
+            </div>
+          </li>
+          <li class="donate">
+            <h3>Ethereum and EVM chains</h3>
+            <div class="donate-row">
+              <div class="donate-field">
+                <code class="mono">0x189419C6A19d11263c28E5391a473741e44EF459</code>
+                <button type="button" class="donate-icon" data-donate-copy aria-label="Copy address">
+                  <svg><use href="#icon-copy" /></svg>
+                  <svg class="icon-copied"><use href="#icon-copied" /></svg>
+                </button>
+              </div>
+              <button type="button" class="donate-icon donate-icon-standout" data-donate-qr aria-label="Show QR code">
+                <svg><use href="#icon-qr" /></svg>
+              </button>
+            </div>
+          </li>
+          <li class="donate">
+            <h3>Solana</h3>
+            <div class="donate-row">
+              <div class="donate-field">
+                <code class="mono">9zgzGhbMYSj7Sac19jgSwP1UoZ6kWqXURHKs6ARe3w8X</code>
+                <button type="button" class="donate-icon" data-donate-copy aria-label="Copy address">
+                  <svg><use href="#icon-copy" /></svg>
+                  <svg class="icon-copied"><use href="#icon-copied" /></svg>
+                </button>
+              </div>
+              <button type="button" class="donate-icon donate-icon-standout" data-donate-qr aria-label="Show QR code">
+                <svg><use href="#icon-qr" /></svg>
+              </button>
+            </div>
+          </li>
+          <li class="donate">
+            <h3>XRP</h3>
+            <div class="donate-row">
+              <div class="donate-field">
+                <code class="mono">rKGTvURZpK4ug3TrHPikoafywyaBjuMaXh</code>
+                <button type="button" class="donate-icon" data-donate-copy aria-label="Copy address">
+                  <svg><use href="#icon-copy" /></svg>
+                  <svg class="icon-copied"><use href="#icon-copied" /></svg>
+                </button>
+              </div>
+              <button type="button" class="donate-icon donate-icon-standout" data-donate-qr aria-label="Show QR code">
+                <svg><use href="#icon-qr" /></svg>
+              </button>
+            </div>
+          </li>
+          <li class="donate">
+            <h3>Cardano</h3>
+            <div class="donate-row">
+              <div class="donate-field">
+                <code class="mono">addr1q8qwc455erdfevgj8xv78r262fs8eu6xln9u3s7lps8vvygckhpjgqxgmkcxvr2zhjjrdd9ty9ggev4yahznlzymg8cs5n6pt6</code>
+                <button type="button" class="donate-icon" data-donate-copy aria-label="Copy address">
+                  <svg><use href="#icon-copy" /></svg>
+                  <svg class="icon-copied"><use href="#icon-copied" /></svg>
+                </button>
+              </div>
+              <button type="button" class="donate-icon donate-icon-standout" data-donate-qr aria-label="Show QR code">
+                <svg><use href="#icon-qr" /></svg>
+              </button>
+            </div>
+          </li>
+        </ul>
+      </section>
     </main>
 
     <footer class="site-footer" aria-labelledby="disclaimer-title">
@@ -469,6 +643,15 @@
       </div>
       <ul class="wallet-list" id="wallet-list"></ul>
       <p class="inline-error" id="wallet-dialog-error" role="alert" hidden></p>
+    </dialog>
+
+    <dialog class="wallet-dialog qr-dialog" id="donate-qr-dialog" aria-labelledby="donate-qr-title">
+      <div class="wallet-dialog-head">
+        <h2 id="donate-qr-title">Donation address</h2>
+        <button type="button" class="button button-ghost" id="donate-qr-close" aria-label="Close">Close</button>
+      </div>
+      <div class="donate-qr-frame" id="donate-qr-frame"></div>
+      <code class="mono donate-qr-address" id="donate-qr-address"></code>
     </dialog>
 
     <script type="module" src="/src/main.ts"></script>

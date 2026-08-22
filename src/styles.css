@@ -936,6 +936,145 @@ wcm-modal {
   text-underline-offset: 0.15em;
 }
 
+.support-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  color: var(--ink-muted);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  text-wrap: pretty;
+  margin-bottom: 1.75rem;
+}
+
+.donate-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.donate h3 {
+  font-size: 0.9375rem;
+  margin-bottom: 0.45rem;
+}
+
+.donate-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+
+.donate-field {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+  padding: 0.28rem 0.28rem 0.28rem 0.65rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.donate-field code {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.donate-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 3px;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.donate-icon svg {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+}
+
+.donate-icon .icon-copied {
+  display: none;
+}
+
+.donate-icon:hover,
+.donate-icon:focus-visible {
+  background: var(--surface-sunken);
+  color: var(--ink);
+}
+
+.donate-icon:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.donate-icon.is-flashing {
+  color: var(--valid);
+}
+
+.donate-icon.is-flashing svg:first-child {
+  display: none;
+}
+
+.donate-icon.is-flashing .icon-copied {
+  display: block;
+}
+
+.donate-icon-standout {
+  align-self: stretch;
+  height: auto;
+  min-height: 2rem;
+  width: 2.25rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.icon-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.qr-dialog {
+  width: min(22rem, calc(100vw - 2rem));
+}
+
+.donate-qr-frame {
+  display: grid;
+  place-items: center;
+  padding: 0.85rem;
+  background: #fff;
+  border-radius: var(--radius);
+}
+
+.donate-qr-frame svg {
+  display: block;
+  width: min(16rem, 100%);
+  height: auto;
+}
+
+.donate-qr-address {
+  display: block;
+  margin-top: 0.85rem;
+  overflow-wrap: anywhere;
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+}
+
 @media (max-width: 40rem) {
   .verdict {
     flex-direction: column-reverse;
@@ -949,6 +1088,10 @@ wcm-modal {
 
   .button-copy {
     align-self: flex-start;
+  }
+
+  .donate-row {
+    flex-direction: column;
   }
 }
 

@@ -23,6 +23,9 @@ import {
 } from './lib/share.ts';
 import { applyTheme, readTheme, storeTheme, type Theme } from './lib/theme.ts';
 import type { ProofCertificate, ProofKind } from './lib/certificate.ts';
+import { qrSvgForText } from './lib/qr.ts';
+
+document.documentElement.classList.add('is-booted');
 
 // ── Elements ───────────────────────────────────────────────────────────────
 
@@ -641,9 +644,65 @@ for (const input of [verifyAddressInput, verifyMessageInput, verifySignatureInpu
 
 window.addEventListener('hashchange', () => void applyHash());
 
+const donateSection = el('#support');
+const donateQrDialog = el<HTMLDialogElement>('#donate-qr-dialog');
+const donateQrClose = el<HTMLButtonElement>('#donate-qr-close');
+const donateQrTitle = el('#donate-qr-title');
+const donateQrFrame = el('#donate-qr-frame');
+const donateQrAddress = el('#donate-qr-address');
+
+donateSection.addEventListener('click', (event) => {
+  const target = event.target;
+  if (!(target instanceof Element)) return;
+  const row = target.closest('.donate');
+  if (!row) return;
+  const address = row.querySelector('code')?.textContent?.trim();
+  if (!address) return;
+  if (target.closest('[data-donate-copy]') instanceof HTMLButtonElement) {
+    void copyAndFlash(target.closest('[data-donate-copy]') as HTMLButtonElement, address);
+    return;
+  }
+  if (target.closest('[data-donate-qr]') instanceof HTMLButtonElement) {
+    void openDonateQr(row.querySelector('h3')?.textContent?.trim() ?? 'Donation address', address);
+  }
+});
+
+donateQrClose.addEventListener('click', () => donateQrDialog.close());
+donateQrDialog.addEventListener('click', (event) => {
+  if (event.target === donateQrDialog) donateQrDialog.close();
+});
+
+async function openDonateQr(label: string, address: string): Promise<void> {
+  donateQrTitle.textContent = label;
+  donateQrAddress.textContent = address;
+  donateQrFrame.replaceChildren();
+  donateQrDialog.showModal();
+  const svg = await qrSvgForText(address);
+  if (!donateQrDialog.open) return;
+  donateQrFrame.replaceChildren();
+  donateQrFrame.insertAdjacentHTML('afterbegin', svg);
+}
+
 async function copyAndFlash(button: HTMLButtonElement, text: string): Promise<void> {
   const copied = await copyText(text);
+  if (button.classList.contains('donate-icon')) {
+    flashIconButton(button, copied);
+    return;
+  }
   flashButton(button, copied ? 'Copied' : 'Press ⌘C');
+}
+
+function flashIconButton(button: HTMLButtonElement, ok: boolean): void {
+  const original = button.dataset['originalLabel'] ?? button.getAttribute('aria-label') ?? 'Copy address';
+  button.dataset['originalLabel'] = original;
+  button.classList.add('is-flashing');
+  button.setAttribute('aria-label', ok ? 'Copied' : 'Press ⌘C');
+  window.clearTimeout(Number(button.dataset['flashTimer'] ?? 0));
+  const timer = window.setTimeout(() => {
+    button.classList.remove('is-flashing');
+    button.setAttribute('aria-label', original);
+  }, 1400);
+  button.dataset['flashTimer'] = String(timer);
 }
 
 function certificateFromUi(kind: ProofKind): ProofCertificate | null {
