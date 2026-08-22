@@ -2,8 +2,8 @@ import './styles.css';
 
 import {
   adapters,
-  defaultChainId,
   getAdapter,
+  isChainId,
   UserRejectedError,
   WalletError,
   type ChainAdapter,
@@ -29,9 +29,10 @@ document.documentElement.classList.add('is-booted');
 
 // ── Elements ───────────────────────────────────────────────────────────────
 
-const chainSelector = el('#chain-selector');
+const chainSelect = el<HTMLSelectElement>('#chain-select');
+const modeSelect = el<HTMLSelectElement>('#mode-select');
+const stepMode = el('#step-mode');
 const themeSelector = el('#theme-selector');
-const tabButtons = elAll<HTMLButtonElement>('[role="tab"]');
 const panels: Record<Tab, HTMLElement> = {
   sign: el('#panel-sign'),
   verify: el('#panel-verify'),
@@ -76,22 +77,23 @@ const walletDialogError = el('#wallet-dialog-error');
 // ── State ──────────────────────────────────────────────────────────────────
 
 interface State {
-  chainId: ChainId;
-  tab: Tab;
+  chainId: ChainId | null;
+  tab: Tab | null;
   theme: Theme;
   connection: Connection | null;
   proof: Proof | null;
 }
 
 const state: State = {
-  chainId: defaultChainId,
-  tab: 'sign',
+  chainId: null,
+  tab: null,
   theme: readTheme(),
   connection: null,
   proof: null,
 };
 
 function adapter(): ChainAdapter {
+  if (!state.chainId) throw new Error('No chain selected.');
   return getAdapter(state.chainId);
 }
 
@@ -99,26 +101,34 @@ function adapter(): ChainAdapter {
 
 function buildChainSelector(): void {
   for (const chain of adapters) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'segment';
-    button.setAttribute('role', 'radio');
-    button.dataset['chain'] = chain.id;
-    button.textContent = chain.name;
-    chainSelector.append(button);
+    const option = document.createElement('option');
+    option.value = chain.id;
+    option.textContent = chain.name;
+    chainSelect.append(option);
   }
 }
 
-function paintChainSelector(): void {
-  for (const button of elAll<HTMLButtonElement>('[data-chain]', chainSelector)) {
-    const selected = button.dataset['chain'] === state.chainId;
-    button.setAttribute('aria-checked', String(selected));
-    button.tabIndex = selected ? 0 : -1;
+function paintChooser(options?: { focusMode?: boolean }): void {
+  chainSelect.value = state.chainId ?? '';
+  modeSelect.value = state.tab ?? '';
+  const hadMode = !stepMode.hidden;
+  stepMode.hidden = state.chainId === null;
+  if (options?.focusMode !== false && state.chainId && hadMode === false) {
+    modeSelect.focus();
   }
+  const ready = state.chainId !== null && state.tab !== null;
+  panels.sign.hidden = !(ready && state.tab === 'sign');
+  panels.verify.hidden = !(ready && state.tab === 'verify');
 }
 
-async function setChain(chainId: ChainId): Promise<void> {
-  if (chainId === state.chainId) return;
+async function setChain(
+  chainId: ChainId,
+  options?: { focusMode?: boolean },
+): Promise<void> {
+  if (chainId === state.chainId) {
+    paintChooser(options);
+    return;
+  }
   state.chainId = chainId;
   // The open picker lists the previous chain's wallets.
   walletDialog.close();
@@ -127,11 +137,17 @@ async function setChain(chainId: ChainId): Promise<void> {
   await disconnect();
   clearSignResult();
   clearVerifyResult();
-  paintChainSelector();
   paintChainCopy();
+  paintChooser(options);
+}
+
+function setTab(tab: Tab): void {
+  state.tab = tab;
+  paintChooser();
 }
 
 function paintChainCopy(): void {
+  if (!state.chainId) return;
   const active = adapter();
   signStandard.textContent = active.signingStandard;
   verifyStandard.textContent = `${active.signingStandard} · checked in this browser`;
@@ -157,22 +173,8 @@ function setTheme(theme: Theme): void {
   paintThemeSelector();
 }
 
-// ── Tabs ───────────────────────────────────────────────────────────────────
-
-function setTab(tab: Tab): void {
-  state.tab = tab;
-  for (const button of tabButtons) {
-    const selected = button.dataset['tab'] === tab;
-    button.setAttribute('aria-selected', String(selected));
-    button.tabIndex = selected ? 0 : -1;
-  }
-  panels.sign.hidden = tab !== 'sign';
-  panels.verify.hidden = tab !== 'verify';
-}
-
 /**
- * Arrow-key navigation for both segmented controls. Native radios and tabs get
- * this for free; hand-rolled ones have to earn it.
+ * Arrow-key navigation for the theme segmented control.
  */
 function wireRovingFocus(container: Element, selector: string): void {
   container.addEventListener('keydown', (event) => {
@@ -346,7 +348,8 @@ function clearSignResult(): void {
 
 async function signMessage(): Promise<void> {
   const connection = state.connection;
-  if (!connection) return;
+  const chainId = state.chainId;
+  if (!connection || !chainId) return;
 
   const message = signMessageInput.value;
   signError.hidden = true;
@@ -357,7 +360,7 @@ async function signMessage(): Promise<void> {
   try {
     const signature = await connection.signMessage(message);
     state.proof = {
-      chain: state.chainId,
+      chain: chainId,
       address: connection.address,
       message,
       signature,
@@ -540,7 +543,7 @@ function fillVerifyForm(proof: Proof): void {
 
 async function applyHash(): Promise<void> {
   const { tab, proof } = parseHash(window.location.hash);
-  if (proof.chain) await setChain(proof.chain);
+  if (proof.chain) await setChain(proof.chain, { focusMode: false });
 
   if (proof.address !== undefined) verifyAddressInput.value = proof.address;
   if (proof.message !== undefined) verifyMessageInput.value = proof.message;
@@ -548,16 +551,16 @@ async function applyHash(): Promise<void> {
 
   if (tab) setTab(tab);
 
-  const candidate = { chain: state.chainId, ...proof };
-  if (tab === 'verify' && isCompleteProof(candidate)) await runVerification();
+  const chain = state.chainId ?? proof.chain;
+  if (tab === 'verify' && chain && isCompleteProof({ ...proof, chain })) {
+    await runVerification();
+  }
 }
 
 // ── Wiring ─────────────────────────────────────────────────────────────────
 
 buildChainSelector();
-paintChainSelector();
-paintChainCopy();
-setTab('sign');
+paintChooser();
 paintConnection();
 
 // Applied rather than set: writing storage here would leave a preference behind
@@ -565,12 +568,12 @@ paintConnection();
 applyTheme(state.theme);
 paintThemeSelector();
 
-chainSelector.addEventListener('click', (event) => {
-  const button = (event.target as Element).closest<HTMLElement>('[data-chain]');
-  const chainId = button?.dataset['chain'];
-  if (chainId) void setChain(chainId as ChainId);
+chainSelect.addEventListener('change', () => {
+  if (isChainId(chainSelect.value)) void setChain(chainSelect.value);
 });
-wireRovingFocus(chainSelector, '[data-chain]');
+modeSelect.addEventListener('change', () => {
+  if (modeSelect.value === 'sign' || modeSelect.value === 'verify') setTab(modeSelect.value);
+});
 
 themeSelector.addEventListener('click', (event) => {
   const button = (event.target as Element).closest<HTMLElement>('[data-theme-choice]');
@@ -578,11 +581,6 @@ themeSelector.addEventListener('click', (event) => {
   if (choice === 'dark' || choice === 'light') setTheme(choice);
 });
 wireRovingFocus(themeSelector, '[data-theme-choice]');
-
-for (const button of tabButtons) {
-  button.addEventListener('click', () => setTab(button.dataset['tab'] as Tab));
-}
-wireRovingFocus(el('[role="tablist"]'), '[role="tab"]');
 
 connectButton.addEventListener('click', () => void openWalletDialog());
 walletDialogClose.addEventListener('click', () => walletDialog.close());
@@ -706,6 +704,7 @@ function flashIconButton(button: HTMLButtonElement, ok: boolean): void {
 }
 
 function certificateFromUi(kind: ProofKind): ProofCertificate | null {
+  if (!state.chainId) return null;
   const active = adapter();
   if (kind === 'signed') {
     const proof = state.proof;

@@ -45,7 +45,7 @@
       content="Sign a message with a Bitcoin, Ethereum, Solana, Ripple (XRP) or Cardano wallet and verify the signature in your browser."
     />
     <meta name="twitter:image" content="https://www.proofofownership.tech/og.png" />
-    <meta name="theme-color" content="#0c0d0f" />
+    <meta name="theme-color" content="#000000" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
     <!-- Linked here so the first paint is styled. main.ts also imports this
@@ -64,10 +64,10 @@
         z-index: 2147483646;
         display: grid;
         place-items: center;
-        background: #0c0d0f;
+        background: #000000;
       }
       html[data-theme='light'] .boot {
-        background: #f2f2ef;
+        background: #f5f5f7;
       }
       html.is-booted .boot {
         display: none;
@@ -75,14 +75,14 @@
       .boot-ring {
         width: 36px;
         height: 36px;
-        border: 2px solid #363a41;
-        border-top-color: #e9eaec;
+        border: 2px solid #3a3a3c;
+        border-top-color: #f5f5f7;
         border-radius: 50%;
         animation: boot-spin 0.7s linear infinite;
       }
       html[data-theme='light'] .boot-ring {
-        border-color: #c6c6bf;
-        border-top-color: #16171b;
+        border-color: #b0b0b5;
+        border-top-color: #1d1d1f;
       }
       @keyframes boot-spin {
         to {
@@ -143,64 +143,72 @@
         </svg>
         <div class="wordmark-text">
           <h1>Proof of Ownership</h1>
-          <p>Sign &amp; verify wallet messages</p>
         </div>
       </div>
-      <div
-        class="segmented segmented-compact"
-        role="radiogroup"
-        aria-label="Theme"
-        id="theme-selector"
-      >
-        <button
-          type="button"
-          class="segment"
-          role="radio"
-          data-theme-choice="dark"
-          aria-checked="true"
+      <div class="header-tools">
+        <div
+          class="segmented segmented-compact"
+          role="radiogroup"
+          aria-label="Theme"
+          id="theme-selector"
         >
-          Dark
-        </button>
-        <button
-          type="button"
-          class="segment"
-          role="radio"
-          data-theme-choice="light"
-          aria-checked="false"
-          tabindex="-1"
-        >
-          Light
-        </button>
+          <button
+            type="button"
+            class="segment"
+            role="radio"
+            data-theme-choice="dark"
+            aria-checked="true"
+          >
+            Dark
+          </button>
+          <button
+            type="button"
+            class="segment"
+            role="radio"
+            data-theme-choice="light"
+            aria-checked="false"
+            tabindex="-1"
+          >
+            Light
+          </button>
+        </div>
       </div>
     </header>
 
     <main id="main">
-      <p class="lead">
-        Sign a message with a Bitcoin, Ethereum, Solana, Ripple (XRP Ledger) or Cardano
-        wallet, then verify the signature in your browser. A cryptographic proof of
-        ownership &mdash; no server, no transaction, no fee.
-      </p>
+      <section class="hero" aria-label="Introduction">
+        <p class="hero-kicker">Proof of ownership</p>
+        <p class="lead"><span>Prove the wallet is yours.</span> <span>Keep the key where it is.</span></p>
+        <p class="hero-sub">
+          Sign and verify Bitcoin, Ethereum, Solana, XRP and Cardano messages in the
+          browser. No server, no transaction, no fee.
+        </p>
+        <ul class="hero-pills">
+          <li>Runs locally</li>
+          <li>Nothing uploaded</li>
+          <li>No tracking</li>
+        </ul>
+      </section>
 
-      <section class="controls" aria-label="Chain and mode">
-        <div class="control">
-          <span class="control-label" id="chain-label">Chain</span>
-          <div class="segmented" role="radiogroup" aria-labelledby="chain-label" id="chain-selector"></div>
+      <section class="chooser" aria-label="Chain and mode">
+        <div class="chooser-step" id="step-chain">
+          <label class="control-label" for="chain-select">Select chain</label>
+          <select id="chain-select" class="chooser-select">
+            <option value="" selected disabled>Select chain</option>
+          </select>
         </div>
-        <div class="control">
-          <span class="control-label" id="mode-label">Mode</span>
-          <div class="segmented" role="tablist" aria-labelledby="mode-label">
-            <button type="button" class="segment" role="tab" id="tab-sign" data-tab="sign" aria-controls="panel-sign" aria-selected="true">
-              Sign message
-            </button>
-            <button type="button" class="segment" role="tab" id="tab-verify" data-tab="verify" aria-controls="panel-verify" aria-selected="false" tabindex="-1">
-              Verify signature
-            </button>
-          </div>
+        <div class="chooser-step" id="step-mode" hidden aria-live="polite">
+          <label class="control-label" for="mode-select">Select mode</label>
+          <select id="mode-select" class="chooser-select">
+            <option value="" selected disabled>Select mode</option>
+            <option value="sign">Sign message</option>
+            <option value="verify">Verify signature</option>
+          </select>
         </div>
       </section>
 
       <!-- ── Sign ─────────────────────────────────────────────────────── -->
-      <section class="panel" id="panel-sign" role="tabpanel" aria-labelledby="tab-sign">
+      <section class="panel" id="panel-sign" hidden>
         <div class="card">
           <div class="card-head">
             <h2>Sign a message</h2>
@@ -286,7 +294,7 @@
       </section>
 
       <!-- ── Verify ───────────────────────────────────────────────────── -->
-      <section class="panel" id="panel-verify" role="tabpanel" aria-labelledby="tab-verify" hidden>
+      <section class="panel" id="panel-verify" hidden>
         <div class="card">
           <div class="card-head">
             <h2>Verify a signature</h2>
