@@ -108,17 +108,46 @@ function buildChainSelector(): void {
   }
 }
 
+function prefersReducedMotion(): boolean {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function scrollStepIntoView(element: HTMLElement): void {
+  const reduce = prefersReducedMotion();
+  const run = (): void => {
+    element.scrollIntoView({
+      behavior: reduce ? 'auto' : 'smooth',
+      block: 'start',
+      inline: 'nearest',
+    });
+  };
+  // Two frames: the step/panel was just un-hidden and is not in layout yet.
+  requestAnimationFrame(() => requestAnimationFrame(run));
+}
+
 function paintChooser(options?: { focusMode?: boolean }): void {
+  const hadMode = !stepMode.hidden;
+  const signWasHidden = panels.sign.hidden;
+  const verifyWasHidden = panels.verify.hidden;
+
   chainSelect.value = state.chainId ?? '';
   modeSelect.value = state.tab ?? '';
-  const hadMode = !stepMode.hidden;
   stepMode.hidden = state.chainId === null;
-  if (options?.focusMode !== false && state.chainId && hadMode === false) {
-    modeSelect.focus();
-  }
   const ready = state.chainId !== null && state.tab !== null;
   panels.sign.hidden = !(ready && state.tab === 'sign');
   panels.verify.hidden = !(ready && state.tab === 'verify');
+
+  const modeJustShown = Boolean(state.chainId) && hadMode === false;
+  const signJustShown = !panels.sign.hidden && signWasHidden;
+  const verifyJustShown = !panels.verify.hidden && verifyWasHidden;
+
+  if (signJustShown) scrollStepIntoView(panels.sign);
+  else if (verifyJustShown) scrollStepIntoView(panels.verify);
+  else if (modeJustShown) scrollStepIntoView(stepMode);
+
+  if (options?.focusMode !== false && modeJustShown) {
+    modeSelect.focus({ preventScroll: true });
+  }
 }
 
 async function setChain(

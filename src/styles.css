@@ -183,6 +183,11 @@ main {
   height: 34px;
   color: var(--ink);
   stroke-width: 1.25;
+  background: transparent;
+}
+
+.mark-check {
+  stroke: var(--valid);
 }
 
 .wordmark-text {
@@ -296,6 +301,7 @@ main {
   align-items: stretch;
   gap: 0.5rem;
   width: min(22rem, 100%);
+  scroll-margin-top: 5.5rem;
 }
 
 .chooser-step .control-label {
@@ -411,6 +417,10 @@ main {
 }
 
 /* ── Card ────────────────────────────────────────────────────────────────── */
+
+.panel {
+  scroll-margin-top: 5.5rem;
+}
 
 .panel .card {
   max-width: 40rem;

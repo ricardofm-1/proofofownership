@@ -46,8 +46,13 @@
     />
     <meta name="twitter:image" content="https://www.proofofownership.tech/og.png" />
     <meta name="theme-color" content="#000000" />
+    <!-- PNG/ICO first: Google Search does not reliably use a CSS-coloured
+         SVG as the result icon. Absolute URLs, same reason as og:image. -->
+    <link rel="icon" href="https://www.proofofownership.tech/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/png" sizes="48x48" href="https://www.proofofownership.tech/favicon-48.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="https://www.proofofownership.tech/favicon-192.png" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="apple-touch-icon" href="https://www.proofofownership.tech/apple-touch-icon.png" />
     <!-- Linked here so the first paint is styled. main.ts also imports this
          file; Vite treats both as the same module. -->
     <link
@@ -136,10 +141,10 @@
 
     <header class="site-header">
       <div class="wordmark">
-        <svg class="mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true" focusable="false">
+        <svg class="mark" viewBox="0 0 32 32" width="34" height="34" fill="none" aria-hidden="true" focusable="false">
           <circle cx="16" cy="16" r="14.5" fill="none" stroke="currentColor" />
           <circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-dasharray="2 2.4" />
-          <path d="M11 16.2 L14.6 20 L21.4 12.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" />
+          <path class="mark-check" d="M11 16.2 L14.6 20 L21.4 12.4" fill="none" stroke-width="2" stroke-linecap="square" />
         </svg>
         <div class="wordmark-text">
           <h1>Proof of Ownership</h1>

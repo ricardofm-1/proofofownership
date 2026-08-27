@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render the Open Graph card and the apple-touch icon.
+"""Render the Open Graph card and the raster icons Google Search can crawl.
 
 Re-run after changing the wordmark or the supported chains; the PNGs are
 committed because the production site must not depend on a local font.
@@ -12,11 +12,11 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1] / "public"
-BG = (12, 13, 15)
-INK = (233, 234, 236)
-MUTED = (154, 160, 169)
-LINE = (36, 39, 44)
-VALID = (76, 208, 138)
+BG = (0, 0, 0)
+INK = (245, 245, 247)
+MUTED = (161, 161, 166)
+LINE = (44, 44, 46)
+VALID = (48, 209, 88)
 
 FONT_DIR = Path("/System/Library/Fonts/Supplemental")
 SANS = FONT_DIR / "Arial.ttf"
@@ -42,7 +42,14 @@ def draw_mark(draw: ImageDraw.ImageDraw, cx: int, cy: int, r: int, width: int) -
         (cx + (14.6 - 16) * s, cy + (20 - 16) * s),
         (cx + (21.4 - 16) * s, cy + (12.4 - 16) * s),
     ]
-    draw.line(path, fill=INK, width=width + 1, joint="curve")
+    draw.line(path, fill=VALID, width=width + 1, joint="curve")
+
+
+def mark_transparent(size: int) -> Image.Image:
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    draw_mark(draw, size // 2, size // 2, round(size * 0.378), max(1, round(size / 45)))
+    return img
 
 
 def render_og() -> None:
@@ -78,16 +85,30 @@ def render_og() -> None:
     img.save(ROOT / "og.png", "PNG", optimize=True)
 
 
-def render_icon() -> None:
-    size = 180
-    img = Image.new("RGB", (size, size), BG)
-    draw = ImageDraw.Draw(img)
-    draw_mark(draw, size // 2, size // 2, 68, 4)
-    img.save(ROOT / "apple-touch-icon.png", "PNG", optimize=True)
+def render_icons() -> None:
+    # Logo tiles are transparent so the mark sits on whatever chrome shows it
+    # (browser tab, home screen, search). The Open Graph card stays opaque.
+    favicon_48 = mark_transparent(48)
+    favicon_48.save(ROOT / "favicon-48.png", "PNG", optimize=True)
+    mark_transparent(192).save(ROOT / "favicon-192.png", "PNG", optimize=True)
+    mark_transparent(180).save(ROOT / "apple-touch-icon.png", "PNG", optimize=True)
+    favicon_48.save(
+        ROOT / "favicon.ico",
+        format="ICO",
+        sizes=[(16, 16), (32, 32), (48, 48)],
+    )
 
 
 if __name__ == "__main__":
     ROOT.mkdir(parents=True, exist_ok=True)
     render_og()
-    render_icon()
-    print("wrote", ROOT / "og.png", "and", ROOT / "apple-touch-icon.png")
+    render_icons()
+    print(
+        "wrote",
+        ROOT / "og.png",
+        ROOT / "favicon.ico",
+        ROOT / "favicon-48.png",
+        ROOT / "favicon-192.png",
+        "and",
+        ROOT / "apple-touch-icon.png",
+    )
